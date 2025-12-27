@@ -1,5 +1,11 @@
+import { CartProvider } from "./context/CartContext";
+import CartSidebar from "./Components/Cart/Cart";
+import CartIcon from "./Components/CartIcon/CartIcon";
 import { Geist, Geist_Mono } from "next/font/google";
+import WhatsAppWidgetClient from "./Components/WhatsappWidget";
+import NavBarScrollEffect from "./Components/Navbar/NavBarScrollEffect";
 import "./globals.css";
+import { Footer } from "./Components/Footer/Footer";
 
 const geistSans = Geist({
   variable: "--font-geist-sans",
@@ -18,12 +24,17 @@ export const metadata = {
 
 export default function RootLayout({ children }) {
   return (
-    <html lang="en">
-      <body
-        className={`${geistSans.variable} ${geistMono.variable} antialiased`}
-      >
-        {children}
-      </body>
-    </html>
+    <CartProvider>
+      <html lang="en">
+        <body>
+          <NavBarScrollEffect />
+          {children}
+          <CartSidebar />
+          <CartIcon />
+          <WhatsAppWidgetClient />
+          <Footer />
+        </body>
+      </html>
+    </CartProvider>
   );
 }
