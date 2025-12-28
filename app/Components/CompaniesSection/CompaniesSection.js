@@ -4,7 +4,13 @@ import Image from "next/image";
 import { ArrowRight, ChevronRight } from "lucide-react";
 
 export default async function CollectionsSection() {
-  const collections = await fetchShopifyCollections(4);
+  // Fetch with timeout to prevent blocking server response
+  const collections = await Promise.race([
+    fetchShopifyCollections(4),
+    new Promise((_, reject) => 
+      setTimeout(() => reject(new Error('Timeout')), 5000)
+    )
+  ]).catch(() => []); // Return empty array on timeout/error
 
   const collectionData =
     collections.length > 0
@@ -128,7 +134,13 @@ export default async function CollectionsSection() {
                         alt={collection.altText || collection.title}
                         fill
                         className="object-cover"
-                        sizes="(max-width: 768px) 100vw, (max-width: 1200px) 50vw, 25vw"
+                        sizes="(max-width: 640px) 100vw, (max-width: 1024px) 50vw, 25vw"
+                        loading={collection.id === 1 ? "eager" : "lazy"}
+                        priority={collection.id === 1}
+                        quality={75}
+                        // Mobile optimization: serve smaller images
+                        placeholder="blur"
+                        blurDataURL="data:image/jpeg;base64,/9j/4AAQSkZJRgABAQAAAQABAAD/2wBDAAYEBQYFBAYGBQYHBwYIChAKCgkJChQODwwQFxQYGBcUFhYaHSUfGhsjHBYWICwgIyYnKSopGR8tMC0oMCUoKSj/2wBDAQcHBwoIChMKChMoGhYaKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCj/wAARCAAIAAoDASIAAhEBAxEB/8QAFQABAQAAAAAAAAAAAAAAAAAAAAv/xAAhEAACAQMDBQAAAAAAAAAAAAABAgMABAUGIWGRkqGx0f/EABUBAQEAAAAAAAAAAAAAAAAAAAMF/8QAGhEAAgIDAAAAAAAAAAAAAAAAAAECEgMRkf/aAAwDAQACEQMRAD8AltJagyeH0AthI5xdrLcNM91BF5pX2HaH9bcfaSXWGaRmknyJckliyjqTzSlT54b6bk+h0R//2Q=="
                       />
                     ) : (
                       /* Fallback icon if no image */

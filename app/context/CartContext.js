@@ -1,5 +1,5 @@
 "use client";
-import React, { createContext, useContext, useState, useEffect } from "react";
+import React, { createContext, useContext, useState, useEffect, useMemo, useCallback } from "react";
 
 const CartContext = createContext();
 
@@ -7,17 +7,53 @@ export function CartProvider({ children }) {
   const [cartItems, setCartItems] = useState([]);
   const [isCartOpen, setIsCartOpen] = useState(false);
 
-  // Load cart from localStorage on mount
+  // Load cart from localStorage on mount - defer to avoid blocking
   useEffect(() => {
-    const savedCart = localStorage.getItem("flowerShopCart");
-    if (savedCart) {
-      setCartItems(JSON.parse(savedCart));
+    // Use requestIdleCallback to defer non-critical work
+    const loadCart = () => {
+      try {
+        const savedCart = localStorage.getItem("flowerShopCart");
+        if (savedCart) {
+          setCartItems(JSON.parse(savedCart));
+        }
+      } catch (error) {
+        console.error("Error loading cart:", error);
+      }
+    };
+
+    if (typeof window !== "undefined") {
+      if ("requestIdleCallback" in window) {
+        requestIdleCallback(loadCart, { timeout: 2000 });
+      } else {
+        // Fallback for browsers without requestIdleCallback
+        setTimeout(loadCart, 0);
+      }
     }
   }, []);
 
-  // Save cart to localStorage on change
+  // Save cart to localStorage on change - debounce aggressively for mobile
   useEffect(() => {
-    localStorage.setItem("flowerShopCart", JSON.stringify(cartItems));
+    if (cartItems.length === 0) return; // Don't save empty cart on mount
+
+    // Use requestIdleCallback for mobile performance - don't block main thread
+    const saveCart = () => {
+      try {
+        localStorage.setItem("flowerShopCart", JSON.stringify(cartItems));
+      } catch (error) {
+        console.error("Error saving cart:", error);
+      }
+    };
+
+    let timeoutId;
+    if (typeof window !== "undefined" && "requestIdleCallback" in window) {
+      // Use requestIdleCallback for better mobile performance
+      const idleId = requestIdleCallback(saveCart, { timeout: 1000 });
+      return () => cancelIdleCallback(idleId);
+    } else {
+      // Fallback: debounce with longer timeout for mobile
+      timeoutId = setTimeout(saveCart, 500);
+      return () => clearTimeout(timeoutId);
+    }
   }, [cartItems]);
   const extractShopifyId = (id) => {
     if (!id) return null;
@@ -29,7 +65,7 @@ export function CartProvider({ children }) {
     return String(id); // Return as string for consistency
   };
 
-  const addToCart = (product, quantity = 1, color = "", size = "") => {
+  const addToCart = useCallback((product, quantity = 1, color = "", size = "") => {
     console.log("Adding to cart - Product ID:", product.id);
 
     // Extract the numeric ID for comparison
@@ -71,15 +107,15 @@ export function CartProvider({ children }) {
         ];
       }
     });
-  };
+  }, []);
 
-  const removeFromCart = (itemId) => {
+  const removeFromCart = useCallback((itemId) => {
     setCartItems((prevItems) => prevItems.filter((item) => item.id !== itemId));
-  };
+  }, []);
 
-  const updateQuantity = (itemId, newQuantity) => {
+  const updateQuantity = useCallback((itemId, newQuantity) => {
     if (newQuantity < 1) {
-      removeFromCart(itemId);
+      setCartItems((prevItems) => prevItems.filter((item) => item.id !== itemId));
       return;
     }
     setCartItems((prevItems) =>
@@ -87,43 +123,47 @@ export function CartProvider({ children }) {
         item.id === itemId ? { ...item, quantity: newQuantity } : item
       )
     );
-  };
+  }, []);
 
-  const clearCart = () => {
+  const clearCart = useCallback(() => {
     setCartItems([]);
-  };
+  }, []);
 
-  const getCartTotal = () => {
+  const getCartTotal = useCallback(() => {
     return cartItems.reduce(
       (total, item) => total + item.price * item.quantity,
       0
     );
-  };
+  }, [cartItems]);
 
-  const getCartCount = () => {
+  const getCartCount = useCallback(() => {
     return cartItems.reduce((count, item) => count + item.quantity, 0);
-  };
+  }, [cartItems]);
 
-  const openCart = () => setIsCartOpen(true);
-  const closeCart = () => setIsCartOpen(false);
-  const toggleCart = () => setIsCartOpen(!isCartOpen);
+  const openCart = React.useCallback(() => setIsCartOpen(true), []);
+  const closeCart = React.useCallback(() => setIsCartOpen(false), []);
+  const toggleCart = React.useCallback(() => setIsCartOpen(prev => !prev), []);
+
+  // Memoize context value to prevent unnecessary re-renders
+  const contextValue = useMemo(
+    () => ({
+      cartItems,
+      addToCart,
+      removeFromCart,
+      updateQuantity,
+      clearCart,
+      getCartTotal,
+      getCartCount,
+      isCartOpen,
+      openCart,
+      closeCart,
+      toggleCart,
+    }),
+    [cartItems, isCartOpen, addToCart, removeFromCart, updateQuantity, clearCart, getCartTotal, getCartCount, openCart, closeCart, toggleCart]
+  );
 
   return (
-    <CartContext.Provider
-      value={{
-        cartItems,
-        addToCart,
-        removeFromCart,
-        updateQuantity,
-        clearCart,
-        getCartTotal,
-        getCartCount,
-        isCartOpen,
-        openCart,
-        closeCart,
-        toggleCart,
-      }}
-    >
+    <CartContext.Provider value={contextValue}>
       {children}
     </CartContext.Provider>
   );

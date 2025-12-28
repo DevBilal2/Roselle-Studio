@@ -223,6 +223,7 @@ export default function LoginPage() {
               <button
                 type="submit"
                 disabled={isLoading}
+                aria-label={isLoading ? "Signing in..." : "Sign in to your account"}
                 className="w-full py-4 bg-stone-800 text-white rounded-full hover:bg-stone-900 transition-all shadow-sm hover:shadow-md font-semibold flex items-center justify-center gap-3 disabled:opacity-70 disabled:cursor-not-allowed border border-stone-900"
               >
                 {isLoading ? (

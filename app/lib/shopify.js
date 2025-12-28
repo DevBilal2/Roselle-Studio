@@ -97,6 +97,9 @@ export async function fetchShopifyProducts(
           "X-Shopify-Storefront-Access-Token": SHOPIFY_STOREFRONT_TOKEN,
         },
         body: JSON.stringify({ query, variables }),
+        // Cache for 5 minutes to reduce API calls and improve performance
+        next: { revalidate: 300 },
+        cache: "force-cache",
       }
     );
 
@@ -731,7 +734,8 @@ export async function fetchProductByHandle(handle) {
           "X-Shopify-Storefront-Access-Token": SHOPIFY_STOREFRONT_TOKEN,
         },
         body: JSON.stringify({ query, variables: { handle } }),
-        next: { revalidate: 3600 },
+        next: { revalidate: 300 },
+        cache: "force-cache",
       }
     );
 
@@ -793,7 +797,8 @@ export async function fetchShopifyCollections(first = 10) {
           "X-Shopify-Storefront-Access-Token": SHOPIFY_STOREFRONT_TOKEN,
         },
         body: JSON.stringify({ query, variables: { first } }),
-        next: { revalidate: 3600 },
+        next: { revalidate: 300 },
+        cache: "force-cache",
       }
     );
 
@@ -942,7 +947,8 @@ export async function fetchShopifyBlogs(first = 10) {
           "X-Shopify-Storefront-Access-Token": SHOPIFY_STOREFRONT_TOKEN,
         },
         body: JSON.stringify({ query, variables: { first } }),
-        next: { revalidate: 3600 },
+        next: { revalidate: 300 },
+        cache: "force-cache",
       }
     );
 
@@ -1157,7 +1163,8 @@ export async function fetchShopifyArticleByHandle(blogHandle, articleHandle) {
           query, 
           variables: { blogHandle, articleHandle } 
         }),
-        next: { revalidate: 3600 },
+        next: { revalidate: 300 },
+        cache: "force-cache",
       }
     );
 

@@ -1,39 +1,35 @@
 // app/Components/CompactBlogSection.jsx
-"use client";
-
-import React, { useEffect, useState } from "react";
+import React from "react";
 import Link from "next/link";
 import { ArrowRight, BookOpen } from "lucide-react";
 import BlogCard from "./BlogCard";
 import { fetchShopifyBlogArticles, fetchShopifyBlogs } from "../lib/shopify";
 
-const CompactBlogSection = ({ showTitle = true, limit = 3, blogHandle = "elor-scents-blog" }) => {
-  const [blogPosts, setBlogPosts] = useState([]);
-  const [loading, setLoading] = useState(true);
-
-  useEffect(() => {
-    async function loadBlogPosts() {
+const CompactBlogSection = async ({ showTitle = true, limit = 3, blogHandle = "elor-scents-blog" }) => {
+  // Fetch blog posts on the server (non-blocking with timeout)
+  let blogPosts = [];
+  
+  try {
+    blogPosts = await Promise.race([
+      fetchShopifyBlogArticles(blogHandle, limit),
+      new Promise((_, reject) => 
+        setTimeout(() => reject(new Error('Timeout')), 5000)
+      )
+    ]).catch(async () => {
+      // If no posts found with default handle, try to find any blog
       try {
-        let posts = await fetchShopifyBlogArticles(blogHandle, 50);
-        
-        // If no posts found with default handle, try to find any blog
-        if (posts.length === 0) {
-          const blogs = await fetchShopifyBlogs(10);
-          if (blogs.length > 0) {
-            posts = await fetchShopifyBlogArticles(blogs[0].handle, 50);
-          }
+        const blogs = await fetchShopifyBlogs(10);
+        if (blogs.length > 0) {
+          return await fetchShopifyBlogArticles(blogs[0].handle, limit);
         }
-        
-        setBlogPosts(posts);
-      } catch (error) {
-        console.error("Error loading blog posts:", error);
-        setBlogPosts([]);
-      } finally {
-        setLoading(false);
+      } catch (err) {
+        console.error("Error loading blog posts:", err);
       }
-    }
-    loadBlogPosts();
-  }, [blogHandle]);
+      return [];
+    });
+  } catch (error) {
+    console.error("Error loading blog posts:", error);
+  }
 
   const latestPosts = blogPosts.slice(0, limit);
 
@@ -63,17 +59,7 @@ const CompactBlogSection = ({ showTitle = true, limit = 3, blogHandle = "elor-sc
           </div>
         )}
 
-        {loading ? (
-          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-            {[...Array(limit)].map((_, i) => (
-              <div key={i} className="bg-white rounded-2xl border border-stone-200 p-5 animate-pulse">
-                <div className="h-48 bg-stone-200 rounded-xl mb-4"></div>
-                <div className="h-4 bg-stone-200 rounded mb-2"></div>
-                <div className="h-4 bg-stone-200 rounded w-3/4"></div>
-              </div>
-            ))}
-          </div>
-        ) : latestPosts.length > 0 ? (
+        {latestPosts.length > 0 ? (
           <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
             {latestPosts.map((post) => (
               <BlogCard key={post.id} post={post} compact={false} />

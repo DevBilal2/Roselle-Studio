@@ -39,7 +39,7 @@ const AboutSection = () => {
 
           <p className="text-lg text-stone-600 mb-8 leading-relaxed">
             At Roselle Studio, we transform artificial flowers into everlasting
-            art. Our handcrafted arrangements bring nature's elegance into your
+            art. Our handcrafted arrangements bring nature&apos;s elegance into your
             space without the maintenance, offering beauty that lasts for years.
           </p>
 
@@ -116,7 +116,7 @@ const AboutSection = () => {
               Our Vision
             </h2>
             <p className="text-stone-600 mb-6">
-              To become the world's most trusted source for premium artificial
+              To become the world&apos;s most trusted source for premium artificial
               flowers, recognized for our unparalleled quality, design
               innovation, and commitment to sustainable luxury. We envision
               homes and businesses worldwide adorned with our timeless
@@ -124,7 +124,7 @@ const AboutSection = () => {
             </p>
             <div className="bg-white/50 rounded-xl p-4">
               <p className="text-stone-700 italic">
-                "Where artificial meets art, and beauty becomes everlasting."
+                &quot;Where artificial meets art, and beauty becomes everlasting.&quot;
               </p>
             </div>
           </div>
@@ -148,7 +148,7 @@ const AboutSection = () => {
                 icon: <Package size={24} />,
                 title: "Premium Materials",
                 description:
-                  "We use only the highest quality silk, latex, and preserved botanicals that mimic nature's finest details.",
+                  "We use only the highest quality silk, latex, and preserved botanicals that mimic nature&apos;s finest details.",
                 color: "from-amber-100 to-stone-100",
               },
               {
@@ -220,7 +220,7 @@ const AboutSection = () => {
               {
                 step: "01",
                 title: "Inspiration & Design",
-                desc: "Drawing from nature's beauty to create unique designs",
+                desc: "Drawing from nature&apos;s beauty to create unique designs",
               },
               {
                 step: "02",

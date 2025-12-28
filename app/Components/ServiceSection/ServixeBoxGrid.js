@@ -1,6 +1,7 @@
 "use client";
 import React, { useState, useEffect } from "react";
 import { useRouter } from "next/navigation";
+import Image from "next/image";
 import {
   ShoppingBag,
   Heart,
@@ -18,17 +19,33 @@ const ProductsGrid = ({ data }) => {
   const { addToCart, openCart } = useCart();
 
   useEffect(() => {
+    let resizeTimeout;
     const updateCount = () => {
-      const width = window.innerWidth;
-      if (width < 640) setVisibleCount(1);
-      else if (width < 768) setVisibleCount(2);
-      else if (width < 1024) setVisibleCount(3);
-      else setVisibleCount(4);
+      // Debounce to avoid forced reflows on mobile
+      clearTimeout(resizeTimeout);
+      resizeTimeout = setTimeout(() => {
+        // Use requestAnimationFrame to batch DOM reads
+        requestAnimationFrame(() => {
+          const width = window.innerWidth;
+          if (width < 640) setVisibleCount(1);
+          else if (width < 768) setVisibleCount(2);
+          else if (width < 1024) setVisibleCount(3);
+          else setVisibleCount(4);
+        });
+      }, 150);
     };
 
-    updateCount();
-    window.addEventListener("resize", updateCount);
-    return () => window.removeEventListener("resize", updateCount);
+    // Initial value - use CSS media queries approach instead of JS when possible
+    if (typeof window !== "undefined") {
+      updateCount();
+      window.addEventListener("resize", updateCount, { passive: true });
+    }
+    return () => {
+      if (typeof window !== "undefined") {
+        window.removeEventListener("resize", updateCount);
+        clearTimeout(resizeTimeout);
+      }
+    };
   }, []);
 
   const visibleItems = expanded ? data : data.slice(0, visibleCount);
@@ -78,10 +95,11 @@ const ProductsGrid = ({ data }) => {
             >
               {/* Image */}
               {item.image ? (
-                <img
+                <Image
                   src={item.image}
                   alt={item.altText}
-                  className="w-full h-full object-cover group-hover:scale-110 transition-transform duration-700"
+                  fill
+                  className="object-cover group-hover:scale-110 transition-transform duration-700"
                 />
               ) : (
                 <div className="w-full h-full flex items-center justify-center">
@@ -95,9 +113,10 @@ const ProductsGrid = ({ data }) => {
                 <div className="opacity-0 group-hover:opacity-100 transition-opacity duration-300 flex flex-col gap-3 p-6">
                   <button
                     onClick={(e) => handleAddToCart(item, e)}
+                    aria-label={`Add ${item.Heading || item.title || "product"} to cart`}
                     className="px-6 py-3 bg-gradient-to-r from-stone-800 to-stone-900 text-white rounded-lg hover:from-stone-900 hover:to-stone-950 transition-all flex items-center justify-center gap-2 shadow-lg hover:shadow-xl font-medium"
                   >
-                    <ShoppingBag size={20} />
+                    <ShoppingBag size={20} aria-hidden="true" />
                     Add to Cart
                   </button>
                   <button
@@ -105,9 +124,10 @@ const ProductsGrid = ({ data }) => {
                       e.stopPropagation();
                       handleViewDetails(item);
                     }}
+                    aria-label={`View details for ${item.Heading || item.title || "product"}`}
                     className="px-6 py-3 bg-white text-stone-900 rounded-lg hover:bg-stone-100 transition-all flex items-center justify-center gap-2 shadow-lg hover:shadow-xl font-medium"
                   >
-                    <Eye size={20} />
+                    <Eye size={20} aria-hidden="true" />
                     View Details
                   </button>
                 </div>

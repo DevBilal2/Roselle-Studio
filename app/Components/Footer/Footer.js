@@ -26,7 +26,7 @@ export const Footer = () => {
 
           <p className="text-stone-700 leading-relaxed">
             Crafting beautiful floral arrangements that bring joy and celebrate
-            life's special moments. Fresh blooms delivered with love and care.
+            life&apos;s special moments. Fresh blooms delivered with love and care.
           </p>
 
           {/* Feature Tags */}

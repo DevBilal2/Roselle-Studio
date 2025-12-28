@@ -88,9 +88,10 @@ const CartSidebar = () => {
           </div>
           <button
             onClick={closeCart}
+            aria-label="Close cart"
             className="p-2 hover:bg-stone-100 rounded-full transition-colors"
           >
-            <X className="text-stone-600" size={22} />
+            <X className="text-stone-600" size={22} aria-hidden="true" />
           </button>
         </div>
 
@@ -107,6 +108,7 @@ const CartSidebar = () => {
               </p>
               <button
                 onClick={closeCart}
+                aria-label="Close cart and continue shopping"
                 className="px-6 py-3 bg-stone-800 text-white rounded-full hover:bg-stone-900 transition-all font-medium border border-stone-900"
               >
                 Continue Shopping
@@ -128,6 +130,7 @@ const CartSidebar = () => {
                         fill
                         className="object-cover"
                         sizes="(max-width: 768px) 64px, 80px"
+                        loading="lazy"
                       />
                     ) : (
                       <div className="w-full h-full flex items-center justify-center">
@@ -155,9 +158,10 @@ const CartSidebar = () => {
                       </div>
                       <button
                         onClick={() => removeFromCart(item.id)}
+                        aria-label={`Remove ${item.name} from cart`}
                         className="p-1 hover:bg-stone-50 rounded transition-colors flex-shrink-0"
                       >
-                        <Trash2 className="text-stone-400" size={16} />
+                        <Trash2 className="text-stone-400" size={16} aria-hidden="true" />
                       </button>
                     </div>
 
@@ -168,20 +172,22 @@ const CartSidebar = () => {
                           onClick={() =>
                             updateQuantity(item.id, item.quantity - 1)
                           }
+                          aria-label={`Decrease quantity of ${item.name}`}
                           className="p-1 md:p-1.5 text-stone-600 hover:text-stone-800"
                         >
-                          <Minus size={14} className="md:size-[16px]" />
+                          <Minus size={14} className="md:size-[16px]" aria-hidden="true" />
                         </button>
-                        <span className="px-3 md:px-4 text-stone-800 font-medium text-sm md:text-base">
+                        <span className="px-3 md:px-4 text-stone-800 font-medium text-sm md:text-base" aria-label={`Quantity: ${item.quantity}`}>
                           {item.quantity}
                         </span>
                         <button
                           onClick={() =>
                             updateQuantity(item.id, item.quantity + 1)
                           }
+                          aria-label={`Increase quantity of ${item.name}`}
                           className="p-1 md:p-1.5 text-stone-600 hover:text-stone-800"
                         >
-                          <Plus size={14} className="md:size-[16px]" />
+                          <Plus size={14} className="md:size-[16px]" aria-hidden="true" />
                         </button>
                       </div>
                       <span className="font-bold text-stone-700 text-sm md:text-base">
@@ -195,6 +201,7 @@ const CartSidebar = () => {
               <div className="pt-4">
                 <button
                   onClick={clearCart}
+                  aria-label="Clear all items from cart"
                   className="w-full py-3 border-2 border-stone-300 text-stone-600 rounded-full hover:bg-stone-50 transition-colors font-medium text-sm md:text-base"
                 >
                   Clear Cart
@@ -271,13 +278,14 @@ const CartSidebar = () => {
                 onClick={closeCart}
                 className="block w-full py-3 md:py-4 bg-stone-800 text-white rounded-full hover:bg-stone-900 transition-all shadow-sm hover:shadow-md font-semibold flex items-center justify-center gap-2 md:gap-3 text-sm md:text-base text-center border border-stone-900"
               >
-                <CreditCard size={18} className="md:size-[20px]" />
+                <CreditCard size={18} className="md:size-[20px]" aria-hidden="true" />
                 <span>Proceed to Checkout</span>
-                <ChevronRight size={18} className="md:size-[20px]" />
+                <ChevronRight size={18} className="md:size-[20px]" aria-hidden="true" />
               </Link>
 
               <button
                 onClick={closeCart}
+                aria-label="Close cart and continue shopping"
                 className="w-full py-3 border-2 border-stone-300 text-stone-700 rounded-full hover:bg-stone-50 transition-colors font-medium text-sm md:text-base"
               >
                 Continue Shopping

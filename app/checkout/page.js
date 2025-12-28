@@ -2,6 +2,7 @@
 import React, { useState, useEffect } from "react";
 import { useRouter } from "next/navigation";
 import { useCart } from "../context/CartContext";
+import Image from "next/image";
 import {
   CreditCard,
   Truck,
@@ -724,12 +725,14 @@ export default function CheckoutPage() {
                     key={item.id}
                     className="flex items-start gap-3 p-3 bg-stone-50 rounded-lg border border-stone-100"
                   >
-                    <div className="w-12 h-12 rounded-md bg-gradient-to-br from-amber-50 to-stone-100 overflow-hidden flex-shrink-0 border border-stone-200">
+                    <div className="w-12 h-12 rounded-md bg-gradient-to-br from-amber-50 to-stone-100 overflow-hidden flex-shrink-0 border border-stone-200 relative">
                       {item.image ? (
-                        <img
+                        <Image
                           src={item.image}
                           alt={item.name}
-                          className="w-full h-full object-cover"
+                          fill
+                          className="object-cover"
+                          sizes="48px"
                         />
                       ) : (
                         <div className="w-full h-full flex items-center justify-center">

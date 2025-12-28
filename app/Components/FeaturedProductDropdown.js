@@ -65,29 +65,40 @@ export default function FeaturedProductsDropdown() {
   const handleMouseEnter = () => {
     clearTimeout(timeoutRef.current);
 
-    // Calculate position for centered dropdown
+    // Batch DOM reads to avoid forced reflow - use requestAnimationFrame
     if (triggerRef.current) {
-      const rect = triggerRef.current.getBoundingClientRect();
-      const viewportWidth = window.innerWidth;
-      const dropdownWidth = 800;
+      requestAnimationFrame(() => {
+        if (triggerRef.current) {
+          // Batch all DOM reads together
+          const rect = triggerRef.current.getBoundingClientRect();
+          const viewportWidth = window.innerWidth;
+          const scrollY = window.scrollY;
+          const dropdownWidth = 800;
 
-      // Calculate centered position
-      const leftPosition = Math.max(
-        20, // Minimum left margin
-        Math.min(
-          rect.left + rect.width / 2 - dropdownWidth / 2,
-          viewportWidth - dropdownWidth - 20 // Maximum right position
-        )
-      );
+          // Calculate centered position
+          const leftPosition = Math.max(
+            20, // Minimum left margin
+            Math.min(
+              rect.left + rect.width / 2 - dropdownWidth / 2,
+              viewportWidth - dropdownWidth - 20 // Maximum right position
+            )
+          );
 
-      setDropdownPosition({
-        left: leftPosition,
-        top: rect.bottom + window.scrollY,
+          // Batch all DOM writes together
+          requestAnimationFrame(() => {
+            setDropdownPosition({
+              left: leftPosition,
+              top: rect.bottom + scrollY,
+            });
+            setIsOpen(true);
+            setTimeout(() => setIsVisible(true), 10);
+          });
+        }
       });
+    } else {
+      setIsOpen(true);
+      setTimeout(() => setIsVisible(true), 10);
     }
-
-    setIsOpen(true);
-    setTimeout(() => setIsVisible(true), 10);
   };
 
   const handleMouseLeave = () => {
@@ -108,31 +119,48 @@ export default function FeaturedProductsDropdown() {
     }, 150);
   };
 
-  // Handle window resize
+  // Handle window resize - debounced to avoid forced reflows
   useEffect(() => {
+    let resizeTimeout;
     const handleResize = () => {
-      if (isOpen && triggerRef.current) {
-        const rect = triggerRef.current.getBoundingClientRect();
-        const viewportWidth = window.innerWidth;
-        const dropdownWidth = 800;
+      // Debounce resize to avoid multiple reflows
+      clearTimeout(resizeTimeout);
+      resizeTimeout = setTimeout(() => {
+        if (isOpen && triggerRef.current) {
+          // Batch DOM reads in requestAnimationFrame
+          requestAnimationFrame(() => {
+            if (triggerRef.current) {
+              const rect = triggerRef.current.getBoundingClientRect();
+              const viewportWidth = window.innerWidth;
+              const scrollY = window.scrollY;
+              const dropdownWidth = 800;
 
-        const leftPosition = Math.max(
-          20,
-          Math.min(
-            rect.left + rect.width / 2 - dropdownWidth / 2,
-            viewportWidth - dropdownWidth - 20
-          )
-        );
+              const leftPosition = Math.max(
+                20,
+                Math.min(
+                  rect.left + rect.width / 2 - dropdownWidth / 2,
+                  viewportWidth - dropdownWidth - 20
+                )
+              );
 
-        setDropdownPosition({
-          left: leftPosition,
-          top: rect.bottom + window.scrollY,
-        });
-      }
+              // Batch DOM writes
+              requestAnimationFrame(() => {
+                setDropdownPosition({
+                  left: leftPosition,
+                  top: rect.bottom + scrollY,
+                });
+              });
+            }
+          });
+        }
+      }, 150); // Debounce resize
     };
 
-    window.addEventListener("resize", handleResize);
-    return () => window.removeEventListener("resize", handleResize);
+    window.addEventListener("resize", handleResize, { passive: true });
+    return () => {
+      window.removeEventListener("resize", handleResize);
+      clearTimeout(resizeTimeout);
+    };
   }, [isOpen]);
 
   useEffect(() => {

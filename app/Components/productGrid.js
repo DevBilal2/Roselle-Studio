@@ -2,6 +2,7 @@
 "use client";
 import React, { useState } from "react";
 import { useRouter } from "next/navigation";
+import Image from "next/image";
 import { ShoppingBag, Heart, Eye, Sparkles } from "lucide-react";
 import { useCart } from "../context/CartContext";
 
@@ -47,10 +48,17 @@ const ProductGrid = ({ data }) => {
           >
             {/* Image */}
             {item.image ? (
-              <img
+              <Image
                 src={item.image}
-                alt={item.altText}
-                className="w-full h-full object-cover transition-transform duration-700 group-hover:scale-105"
+                alt={item.altText || item.Heading || item.title || "Product"}
+                fill
+                className="object-cover transition-transform duration-700 group-hover:scale-105"
+                sizes="(max-width: 640px) 100vw, (max-width: 1024px) 50vw, 25vw"
+                loading="lazy"
+                quality={75}
+                // Mobile optimization: serve smaller WebP/AVIF images
+                placeholder="blur"
+                blurDataURL="data:image/jpeg;base64,/9j/4AAQSkZJRgABAQAAAQABAAD/2wBDAAYEBQYFBAYGBQYHBwYIChAKCgkJChQODwwQFxQYGBcUFhYaHSUfGhsjHBYWICwgIyYnKSopGR8tMC0oMCUoKSj/2wBDAQcHBwoIChMKChMoGhYaKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCj/wAARCAAIAAoDASIAAhEBAxEB/8QAFQABAQAAAAAAAAAAAAAAAAAAAAv/xAAhEAACAQMDBQAAAAAAAAAAAAABAgMABAUGIWGRkqGx0f/EABUBAQEAAAAAAAAAAAAAAAAAAAMF/8QAGhEAAgIDAAAAAAAAAAAAAAAAAAECEgMRkf/aAAwDAQACEQMRAD8AltJagyeH0AthI5xdrLcNM91BF5pX2HaH9bcfaSXWGaRmknyJckliyjqTzSlT54b6bk+h0R//2Q=="
               />
             ) : (
               <div className="w-full h-full flex items-center justify-center">
@@ -65,13 +73,14 @@ const ProductGrid = ({ data }) => {
                 <button
                   onClick={(e) => handleAddToCart(item, e)}
                   disabled={!item.inStock}
+                  aria-label={item.inStock ? `Add ${item.Heading || item.title || "product"} to cart` : `${item.Heading || item.title || "Product"} is out of stock`}
                   className={`px-6 py-3 rounded-lg transition-all flex items-center justify-center gap-2 font-medium border ${
                     item.inStock
                       ? "bg-stone-800 text-white border-stone-900 hover:bg-stone-900"
                       : "bg-stone-100 text-stone-400 cursor-not-allowed border-stone-200"
                   }`}
                 >
-                  <ShoppingBag size={20} />
+                  <ShoppingBag size={20} aria-hidden="true" />
                   {item.inStock ? "Add to Cart" : "Out of Stock"}
                 </button>
                 <button
@@ -79,9 +88,10 @@ const ProductGrid = ({ data }) => {
                     e.stopPropagation();
                     handleViewDetails(item);
                   }}
+                  aria-label={`View details for ${item.Heading || item.title || "product"}`}
                   className="px-6 py-3 bg-white text-stone-800 rounded-lg hover:bg-stone-50 transition-all flex items-center justify-center gap-2 font-medium border border-stone-300 hover:border-stone-400"
                 >
-                  <Eye size={20} />
+                  <Eye size={20} aria-hidden="true" />
                   Quick View
                 </button>
               </div>

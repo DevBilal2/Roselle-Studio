@@ -1,7 +1,7 @@
 "use client";
 
 import React, { useState } from "react";
-import Select from "react-select";
+// Removed unused react-select import to reduce bundle size
 
 const industryOptions = [
   { value: "Accounting", label: "Accounting" },

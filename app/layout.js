@@ -1,20 +1,44 @@
 import { CartProvider } from "./context/CartContext";
-import CartSidebar from "./Components/Cart/Cart";
-import CartIcon from "./Components/CartIcon/CartIcon";
+import dynamic from "next/dynamic";
 import { Geist, Geist_Mono } from "next/font/google";
-import WhatsAppWidgetClient from "./Components/WhatsappWidget";
-import NavBarScrollEffect from "./Components/Navbar/NavBarScrollEffect";
+import { SpeedInsights } from "@vercel/speed-insights/next";
 import "./globals.css";
-import { Footer } from "./Components/Footer/Footer";
 
+// Use ClientOnlyWrapper for client-only components (handles ssr: false internally)
+const ClientOnlyWrapper = dynamic(
+  () => import("./Components/ClientOnlyWrapper"),
+  {
+    loading: () => null,
+  }
+);
+
+// Navbar can be server-rendered (above fold)
+const NavBarScrollEffect = dynamic(
+  () => import("./Components/Navbar/NavBarScrollEffect")
+);
+
+// Footer is below fold - lazy load for mobile
+const Footer = dynamic(
+  () => import("./Components/Footer/Footer").then((mod) => ({ default: mod.Footer })),
+  {
+    loading: () => <div className="min-h-[200px]" />,
+  }
+);
+
+// Optimize font loading for better LCP
 const geistSans = Geist({
   variable: "--font-geist-sans",
   subsets: ["latin"],
+  display: "swap",
+  preload: true,
+  adjustFontFallback: true,
 });
 
 const geistMono = Geist_Mono({
   variable: "--font-geist-mono",
   subsets: ["latin"],
+  display: "swap",
+  preload: false,
 });
 
 export const metadata = {
@@ -26,13 +50,27 @@ export default function RootLayout({ children }) {
   return (
     <CartProvider>
       <html lang="en">
-        <body>
+        <head>
+          {/* Resource hints - removed unused preconnect for cdn.shopify.com */}
+          <link rel="dns-prefetch" href="https://fonts.googleapis.com" />
+          {/* Critical CSS inline for above-the-fold content - defer non-critical */}
+          <style dangerouslySetInnerHTML={{
+            __html: `
+              /* Critical above-the-fold styles */
+              body{margin:0;font-family:var(--font-geist-sans),system-ui,-apple-system,sans-serif}
+              .scrollbar-hide{-ms-overflow-style:none;scrollbar-width:none}
+              .scrollbar-hide::-webkit-scrollbar{display:none}
+            `
+          }} />
+          {/* Note: CSS is automatically handled by Next.js - no need to manually preload */}
+        </head>
+        <body className={`${geistSans.variable} ${geistMono.variable}`}>
           <NavBarScrollEffect />
           {children}
-          <CartSidebar />
-          <CartIcon />
-          <WhatsAppWidgetClient />
+          {/* Client-only components loaded after page is interactive */}
+          <ClientOnlyWrapper />
           <Footer />
+          <SpeedInsights />
         </body>
       </html>
     </CartProvider>

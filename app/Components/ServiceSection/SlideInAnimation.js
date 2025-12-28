@@ -1,6 +1,5 @@
 "use client";
-import { motion } from "framer-motion";
-import React from "react";
+import { useEffect, useRef, useState } from "react";
 
 const SlideInAnimation = ({
   children,
@@ -9,16 +8,48 @@ const SlideInAnimation = ({
   y = 30,
   className = "",
 }) => {
+  const [isVisible, setIsVisible] = useState(false);
+  const ref = useRef(null);
+
+  useEffect(() => {
+    const observer = new IntersectionObserver(
+      ([entry]) => {
+        if (entry.isIntersecting) {
+          setTimeout(() => setIsVisible(true), delay);
+          observer.disconnect();
+        }
+      },
+      { threshold: 0.2 }
+    );
+
+    const currentRef = ref.current;
+    if (currentRef) {
+      observer.observe(currentRef);
+    }
+
+    return () => {
+      if (currentRef) {
+        observer.unobserve(currentRef);
+      }
+    };
+  }, [delay]);
+
   return (
-    <motion.div
-      initial={{ opacity: 0, y }}
-      whileInView={{ opacity: 1, y: 0 }}
-      transition={{ duration, delay: delay / 1000 }}
-      viewport={{ once: true, amount: 0.2 }} // amount = how much must be visible to trigger
-      className={className}
+    <div
+      ref={ref}
+      className={`transition-all duration-[${duration * 1000}ms] ${
+        isVisible
+          ? "opacity-100 translate-y-0"
+          : `opacity-0 translate-y-[${y}px]`
+      } ${className}`}
+      style={{
+        transitionDuration: `${duration}s`,
+        transitionDelay: `${delay}ms`,
+        transform: isVisible ? "translateY(0)" : `translateY(${y}px)`,
+      }}
     >
       {children}
-    </motion.div>
+    </div>
   );
 };
 

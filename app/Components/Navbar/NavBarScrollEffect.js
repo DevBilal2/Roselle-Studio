@@ -6,12 +6,32 @@ export default function NavBarScrollEffect() {
   const [scrolled, setScrolled] = useState(false);
 
   useEffect(() => {
+    // Defer scroll listener initialization to avoid blocking initial render
     const handleScroll = () => setScrolled(window.scrollY > 40);
-    window.addEventListener("scroll", handleScroll, { passive: true });
-    handleScroll(); // Set on mount
-    return () => window.removeEventListener("scroll", handleScroll);
+    
+    // Use requestIdleCallback to defer scroll listener setup
+    const setupScrollListener = () => {
+      handleScroll(); // Set initial state
+      window.addEventListener("scroll", handleScroll, { passive: true });
+    };
+
+    if (typeof window !== "undefined") {
+      if ("requestIdleCallback" in window) {
+        const idleId = requestIdleCallback(setupScrollListener, { timeout: 1000 });
+        return () => {
+          cancelIdleCallback(idleId);
+          window.removeEventListener("scroll", handleScroll);
+        };
+      } else {
+        // Fallback: defer with setTimeout
+        const timer = setTimeout(setupScrollListener, 100);
+        return () => {
+          clearTimeout(timer);
+          window.removeEventListener("scroll", handleScroll);
+        };
+      }
+    }
   }, []);
-  console.log(scrolled);
   return (
     <NavBar
       className={
