@@ -19,12 +19,12 @@ const Contact = () => {
             </div>
 
             <h2 className="text-4xl md:text-5xl font-bold text-stone-800">
-              Let's Connect
+              Let&apos;s Connect
             </h2>
 
             <p className="text-lg text-stone-600">
               Have questions about our floral arrangements? Need a custom
-              bouquet for a special occasion? We're here to help bring your
+              bouquet for a special occasion? We&apos;re here to help bring your
               floral vision to life.
             </p>
           </div>
@@ -136,7 +136,7 @@ const Contact = () => {
               <h3 className="text-2xl font-bold text-stone-800 mb-2">
                 Send a Message
               </h3>
-              <p className="text-stone-600">We'll respond within 24 hours</p>
+              <p className="text-stone-600">We&apos;ll respond within 24 hours</p>
             </div>
 
             <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
@@ -181,7 +181,7 @@ const Contact = () => {
 
             <div>
               <label className="block text-sm font-medium text-stone-700 mb-2">
-                What's your occasion?
+                What&apos;s your occasion?
               </label>
               <select
                 name="occasion"
@@ -219,7 +219,7 @@ const Contact = () => {
                 className="mt-1 rounded border-stone-300 text-stone-700 focus:ring-stone-300"
               />
               <label htmlFor="terms" className="text-sm text-stone-600">
-                I agree to Roselle Studio's{" "}
+                I agree to Roselle Studio&apos;s{" "}
                 <span className="text-stone-700 font-medium underline">
                   Terms of Service
                 </span>{" "}
@@ -242,7 +242,7 @@ const Contact = () => {
             </button>
 
             <p className="text-center text-sm text-stone-500 mt-4">
-              🌸 We'll respond in your inbox soon!
+              🌸 We&apos;ll respond in your inbox soon!
             </p>
           </form>
         </div>

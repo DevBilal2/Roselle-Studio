@@ -1,5 +1,5 @@
 "use client";
-import { useState, useEffect } from "react";
+import { useState, useEffect, useCallback } from "react";
 import { MessageCircle, Send, User, Lock, AlertCircle } from "lucide-react";
 import Link from "next/link";
 import { checkAuthStatus } from "../lib/auth";
@@ -12,21 +12,13 @@ export default function BlogComments({ articleId, articleHandle }) {
   const [user, setUser] = useState(null);
   const [showLoginPrompt, setShowLoginPrompt] = useState(false);
 
-  useEffect(() => {
-    // Check if user is logged in
-    const authUser = checkAuthStatus();
-    setUser(authUser);
-    
-    // Load comments
-    loadComments();
-  }, [articleId]);
-
-  const loadComments = async () => {
+  const loadComments = useCallback(async () => {
     setIsLoading(true);
     try {
       const response = await fetch(`/api/comments?articleId=${articleId}`);
       if (response.ok) {
         const data = await response.json();
+        console.log(data);
         setComments(data.comments || []);
       }
     } catch (error) {
@@ -34,7 +26,16 @@ export default function BlogComments({ articleId, articleHandle }) {
     } finally {
       setIsLoading(false);
     }
-  };
+  }, [articleId]);
+
+  useEffect(() => {
+    // Check if user is logged in
+    const authUser = checkAuthStatus();
+    setUser(authUser);
+    
+    // Load comments
+    loadComments();
+  }, [loadComments]);
 
   const handleSubmit = async (e) => {
     e.preventDefault();

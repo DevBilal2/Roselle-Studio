@@ -3,6 +3,9 @@ import ProductDetail from "../../Components/DetailPage/ProductDetail";
 import { fetchProductByHandle, fetchShopifyProducts } from "../../lib/shopify";
 import { notFound } from "next/navigation";
 
+// Note: Cannot use runtime: 'edge' with generateStaticParams
+// Static generation provides better performance for product pages
+
 export default async function ProductPage({ params }) {
   const { handle } = await params;
 

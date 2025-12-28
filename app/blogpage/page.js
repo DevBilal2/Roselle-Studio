@@ -22,37 +22,72 @@ export default function BlogPage({ blogHandle = "elor-scents-blog" }) {
   const [searchQuery, setSearchQuery] = useState("");
 
   useEffect(() => {
+    // Defer blog loading aggressively to avoid blocking initial render
+    let cancelled = false;
+
     async function loadBlogPosts() {
       try {
-        let posts = await fetchShopifyBlogArticles(blogHandle, 50);
-        
-        // If no posts found with default handle, try to find any blog
-        if (posts.length === 0) {
-          console.log(`No posts found with handle "${blogHandle}". Trying to find available blogs...`);
-          const blogs = await fetchShopifyBlogs(10);
+        // Use requestIdleCallback with longer timeout to defer non-critical data loading
+        const loadData = async () => {
+          if (cancelled) return;
           
-          if (blogs.length > 0) {
-            console.log(`Found ${blogs.length} blog(s). Trying first blog: "${blogs[0].handle}"`);
-            posts = await fetchShopifyBlogArticles(blogs[0].handle, 50);
+          // Split into smaller chunks to avoid blocking
+          let posts = await fetchShopifyBlogArticles(blogHandle, 50);
+          
+          if (cancelled) return;
+          
+          // If no posts found with default handle, try to find any blog
+          if (posts.length === 0) {
+            const blogs = await fetchShopifyBlogs(10);
             
-            if (posts.length > 0) {
-              console.log(`Successfully loaded ${posts.length} posts from blog "${blogs[0].title}"`);
+            if (blogs.length > 0 && !cancelled) {
+              posts = await fetchShopifyBlogArticles(blogs[0].handle, 50);
             }
-          } else {
-            console.warn("No blogs found in Shopify store.");
           }
+          
+          if (!cancelled) {
+            // Use requestAnimationFrame to batch state updates
+            requestAnimationFrame(() => {
+              if (!cancelled) {
+                setBlogPosts(posts);
+                setLoading(false);
+              }
+            });
+          }
+        };
+
+        if (typeof window !== "undefined" && "requestIdleCallback" in window) {
+          // Increase timeout to defer more aggressively
+          requestIdleCallback(loadData, { timeout: 3000 });
+        } else {
+          // Fallback: defer with longer setTimeout
+          setTimeout(loadData, 500);
         }
-        
-        console.log("Final posts:", posts);
-        setBlogPosts(posts);
       } catch (error) {
-        console.error("Error loading blog posts:", error);
-        setBlogPosts([]);
-      } finally {
-        setLoading(false);
+        if (!cancelled) {
+          console.error("Error loading blog posts:", error);
+          requestAnimationFrame(() => {
+            if (!cancelled) {
+              setBlogPosts([]);
+              setLoading(false);
+            }
+          });
+        }
       }
     }
-    loadBlogPosts();
+
+    // Defer initial load even more
+    if (typeof window !== "undefined") {
+      if ("requestIdleCallback" in window) {
+        requestIdleCallback(loadBlogPosts, { timeout: 2000 });
+      } else {
+        setTimeout(loadBlogPosts, 200);
+      }
+    }
+
+    return () => {
+      cancelled = true;
+    };
   }, [blogHandle]);
 
   // Extract categories and tags from blog posts
@@ -249,7 +284,7 @@ export default function BlogPage({ blogHandle = "elor-scents-blog" }) {
                     )}
                     {searchQuery && (
                       <span className="px-2 py-1 bg-white text-amber-700 text-xs rounded-full border border-amber-300">
-                        Search: "{searchQuery}"
+                        Search: &quot;{searchQuery}&quot;
                       </span>
                     )}
                   </div>
@@ -311,14 +346,14 @@ export default function BlogPage({ blogHandle = "elor-scents-blog" }) {
                       Filtered results for{" "}
                       {selectedCategory !== "All" && (
                         <span className="font-medium text-stone-800">
-                          "{selectedCategory}"{" "}
+                          &quot;{selectedCategory}&quot;{" "}
                         </span>
                       )}
                       {searchQuery && (
                         <>
                           {selectedCategory !== "All" && "and "}
                           <span className="font-medium text-stone-800">
-                            "{searchQuery}"
+                            &quot;{searchQuery}&quot;
                           </span>
                         </>
                       )}
@@ -383,8 +418,8 @@ export default function BlogPage({ blogHandle = "elor-scents-blog" }) {
                 </h3>
                 <p className="text-stone-600 mb-6">
                   {searchQuery
-                    ? `No articles found matching "${searchQuery}"`
-                    : `No articles found in "${selectedCategory}"`}
+                    ? `No articles found matching &quot;${searchQuery}&quot;`
+                    : `No articles found in &quot;${selectedCategory}&quot;`}
                 </p>
                 <button
                   onClick={clearFilters}

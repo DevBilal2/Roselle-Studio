@@ -17,7 +17,10 @@ const BlogCard = ({ post, featured = false, compact = false }) => {
                 alt={post.title}
                 fill
                 className="object-cover"
-                sizes="(max-width: 768px) 100vw, (max-width: 1200px) 50vw, 33vw"
+                sizes="(max-width: 640px) 100vw, (max-width: 1024px) 50vw, 33vw"
+                loading="lazy"
+                quality={75}
+                // Mobile optimization: serve smaller WebP/AVIF images
               />
             ) : (
               <div className="w-full h-full bg-gradient-to-br from-stone-100 to-amber-100 flex items-center justify-center">
@@ -90,6 +93,7 @@ const BlogCard = ({ post, featured = false, compact = false }) => {
                   fill
                   className="object-cover"
                   sizes="80px"
+                  loading="lazy"
                 />
               ) : (
                 <div className="text-2xl text-stone-300">🌸</div>
@@ -131,7 +135,9 @@ const BlogCard = ({ post, featured = false, compact = false }) => {
               alt={post.title}
               fill
               className="object-cover"
-              sizes="(max-width: 768px) 100vw, (max-width: 1200px) 50vw, 33vw"
+              sizes="(max-width: 640px) 100vw, (max-width: 1024px) 50vw, 33vw"
+              loading="lazy"
+              quality={85}
             />
           ) : (
             <div className="w-full h-full bg-gradient-to-br from-stone-100 to-amber-100 flex items-center justify-center">

@@ -2,6 +2,7 @@
 import React from "react";
 import ProductsGrid from "./ServixeBoxGrid"; // Client component
 import SlideInAnimation from "./SlideInAnimation";
+import Link from "next/link";
 import {
   fetchShopifyCollections,
   fetchShopifyProducts,
@@ -9,8 +10,13 @@ import {
 import { Flower2, ShoppingBag, ChevronRight } from "lucide-react";
 
 const Products = async () => {
-  // Fetch collections from Shopify
-  const shopifyCollections = await fetchShopifyCollections(4);
+  // Fetch collections from Shopify with timeout to prevent blocking
+  const shopifyCollections = await Promise.race([
+    fetchShopifyCollections(4),
+    new Promise((_, reject) => 
+      setTimeout(() => reject(new Error('Timeout')), 5000)
+    )
+  ]).catch(() => []); // Return empty array on timeout/error
 
   // If no Shopify collections, use fallback data
   let collectionsData =
@@ -183,13 +189,13 @@ const Products = async () => {
               Our collections are currently being updated. Please check back
               soon!
             </p>
-            <a
+            <Link
               href="/"
               className="inline-flex items-center gap-3 px-8 py-3 bg-stone-800 text-white rounded-lg hover:bg-stone-900 transition-all duration-300 shadow-lg hover:shadow-xl font-medium"
             >
               <ShoppingBag size={20} />
               <span>Return to Home</span>
-            </a>
+            </Link>
           </div>
         </div>
       </div>

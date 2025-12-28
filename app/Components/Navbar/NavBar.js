@@ -52,10 +52,11 @@ export default function NavBar({ className, ulClassName }) {
               className="w-full px-5 py-2.5 pl-12 text-stone-700 bg-white/80 backdrop-blur-sm border border-stone-300 rounded-full focus:outline-none focus:ring-2 focus:ring-stone-400 focus:border-transparent transition-all text-sm"
             />
             <div className="absolute left-4 top-1/2 transform -translate-y-1/2">
-              <Search size={18} className="text-stone-500" />
+              <Search size={18} className="text-stone-500" aria-hidden="true" />
             </div>
             <button
               type="submit"
+              aria-label="Search for products"
               className="absolute right-1.5 top-1/2 transform -translate-y-1/2 px-3 py-1.5 bg-stone-800 text-white rounded-full hover:bg-stone-900 transition-colors text-xs font-medium"
             >
               Search
@@ -71,7 +72,7 @@ export default function NavBar({ className, ulClassName }) {
             className="p-2 hover:bg-stone-200/40 rounded-full transition-colors hover:scale-105"
             title="Sign In"
           >
-            <User size={20} className="text-stone-600" />
+            <User size={20} className="text-stone-600" aria-hidden="true" />
           </Link>
         </div>
       </div>
@@ -114,6 +115,7 @@ export default function NavBar({ className, ulClassName }) {
                     <Icon
                       size={15}
                       className="text-stone-600 group-hover:text-stone-800 transition-all group-hover:translate-x-0.5"
+                      aria-hidden="true"
                     />
                   </Link>
                 )}

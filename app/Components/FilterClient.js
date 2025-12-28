@@ -127,7 +127,7 @@ export default function FiltersClient({ categories, allTags }) {
 
             {currentSearch && (
               <div className="flex items-center gap-1 px-3 py-1 bg-stone-100 text-stone-700 rounded-full text-sm border border-stone-200">
-                <span>Search: "{currentSearch}"</span>
+                <span>Search: &quot;{currentSearch}&quot;</span>
                 <button
                   onClick={() => clearFilter("search")}
                   className="ml-1 text-stone-800 hover:text-stone-900"

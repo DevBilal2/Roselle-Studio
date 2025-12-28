@@ -157,10 +157,12 @@ export default function ProductDetail({ product }) {
               {/* Wishlist Button */}
               <button
                 onClick={handleWishlist}
+                aria-label={addedToWishlist ? `Remove ${product.Heading} from wishlist` : `Add ${product.Heading} to wishlist`}
                 className="absolute top-4 right-4 p-3 bg-white/90 backdrop-blur-sm rounded-full shadow-sm hover:shadow-md transition-all hover:scale-110 border border-stone-200"
               >
                 <Heart
                   size={22}
+                  aria-hidden="true"
                   className={
                     addedToWishlist
                       ? "fill-stone-700 text-stone-700"
@@ -177,6 +179,8 @@ export default function ProductDetail({ product }) {
                   <button
                     key={index}
                     onClick={() => setSelectedImage(index)}
+                    aria-label={`View product image ${index + 1}`}
+                    aria-pressed={selectedImage === index}
                     className={`flex-shrink-0 relative w-16 h-16 md:w-20 md:h-20 rounded-xl overflow-hidden border-2 transition-all ${
                       selectedImage === index
                         ? "border-stone-700 ring-2 ring-stone-200"
@@ -190,6 +194,7 @@ export default function ProductDetail({ product }) {
                         fill
                         className="object-cover"
                         sizes="80px"
+                        loading="lazy"
                       />
                     ) : (
                       <div className="w-full h-full flex items-center justify-center bg-gradient-to-br from-stone-50 to-amber-50">
