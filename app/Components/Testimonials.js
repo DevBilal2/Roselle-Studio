@@ -2,48 +2,41 @@ import dynamic from "next/dynamic";
 
 const testimonials = [
   {
-    name: "Sophia Martinez",
-    title: "Floral Boutique Owner",
-    text: "BloomCraft transformed my online store completely! The floral aesthetic perfectly matches my brand, and customers love how easy it is to navigate. My sales increased by 40% in the first month!",
+    name: "Umer",
+    title: "Customer",
+    text: "Beautiful artificial arrangements from Rosélle Studio. They look so real and last forever. Exactly what I wanted for my home.",
     rating: 5,
-    avatarColor: "bg-gradient-to-r from-stone-300 to-amber-300",
-    icon: "🌸",
+    avatarColor: "bg-amber-100 text-amber-700",
+    icon: "U",
   },
   {
-    name: "James Wilson",
-    title: "Wedding Planner",
-    text: "As a wedding planner, aesthetics are everything. BloomCraft's elegant design makes showcasing my portfolio effortless. The responsive layout looks stunning on all devices.",
+    name: "Bilal",
+    title: "Customer",
+    text: "Great quality and fast delivery. The flowers are stunning and the packaging was careful. Will order again for sure.",
     rating: 5,
-    avatarColor: "bg-gradient-to-r from-amber-300 to-stone-300",
-    icon: "💐",
+    avatarColor: "bg-stone-200 text-stone-700",
+    icon: "B",
   },
   {
-    name: "Aisha Chen",
-    title: "Lifestyle Blogger",
-    text: "The customization options are incredible! I created my dream floral blog in hours without touching code. The performance is lightning fast.",
+    name: "Ahmad",
+    title: "Customer",
+    text: "Rosélle Studio never disappoints. Ordered a few pieces for the office and everyone keeps asking where they're from. Highly recommend.",
     rating: 5,
-    avatarColor: "bg-gradient-to-r from-stone-300 to-amber-300",
-    icon: "🌺",
+    avatarColor: "bg-amber-100 text-amber-800",
+    icon: "A",
   },
   {
-    name: "David Foster",
-    title: "E-commerce Entrepreneur",
-    text: "BloomCraft isn't just beautiful - it's functional. The conversion-focused design increased my add-to-cart rates significantly.",
-    rating: 4,
-    avatarColor: "bg-gradient-to-r from-stone-200 to-amber-200",
-    icon: "🌷",
-  },
-  {
-    name: "Emma Rodriguez",
-    title: "Photographer",
-    text: "Finally a theme that understands visual storytelling! My floral photography looks absolutely breathtaking on BloomCraft.",
+    name: "Maniha",
+    title: "Customer",
+    text: "So happy with my purchase! The artificial flowers look elegant and are perfect for my living room. Thank you Rosélle Studio.",
     rating: 5,
-    avatarColor: "bg-gradient-to-r from-amber-200 to-stone-200",
-    icon: "🌼",
+    avatarColor: "bg-stone-100 text-stone-600",
+    icon: "M",
   },
 ];
 
 // Lazy load the slider component (client component)
+// Intersection Observer handles lazy loading internally, no need for ssr: false
 const TestimonialsSlider = dynamic(() => import("./Testimonials/TestimonialsSlider"), {
   loading: () => (
     <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
@@ -68,12 +61,18 @@ export default function Testimonials() {
             What Our Customers Say
           </h2>
           <p className="text-stone-600/70 max-w-2xl mx-auto">
-            Hear from creative minds who chose BloomCraft
+            Hear from creative minds who chose Roselle Studio
           </p>
         </div>
 
         <div className="relative px-12 md:px-16">
-          <TestimonialsSlider testimonials={testimonials} />
+          {testimonials.length > 0 ? (
+            <TestimonialsSlider testimonials={testimonials} />
+          ) : (
+            <p className="text-center text-stone-500 py-8">
+              Customer reviews will appear here once they start coming in.
+            </p>
+          )}
         </div>
       </div>
     </section>

@@ -85,6 +85,18 @@ const Testimonials = dynamic(() => import("./Components/Testimonials"), {
   ),
 });
 
+export const metadata = {
+  title: "Artificial Flowers Lahore | Bouquets, Bunches, Decor & Wholesale Pakistan",
+  description:
+    "Roselle Studio Lahore – best artificial flowers, bouquets, bunches, decoration pieces & balloons in Pakistan. Shop online or order wholesale. Delivery across Lahore & Pakistan.",
+  openGraph: {
+    title: "Artificial Flowers Lahore | Bouquets, Decor & Wholesale | Roselle Studio",
+    description:
+      "Shop artificial flower bouquets, bunches, home decor & balloons. Wholesale artificial flowers in Lahore & Pakistan.",
+    url: "/",
+  },
+};
+
 export default function Home() {
   return (
     <>

@@ -10,4 +10,56 @@
   display: none;
 }
 
-/* Non-critical animations moved to non-critical.css and loaded async */
+/* Optimized animations using transform and opacity for better performance */
+@keyframes fadeIn {
+  from {
+    opacity: 0;
+    transform: translateY(10px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+@keyframes slideIn {
+  from {
+    opacity: 0;
+    transform: translateX(-20px);
+  }
+  to {
+    opacity: 1;
+    transform: translateX(0);
+  }
+}
+
+/* Use GPU-accelerated properties (transform, opacity) */
+.animate-fade-in {
+  animation: fadeIn 0.3s ease-out;
+  will-change: transform, opacity;
+}
+
+.animate-slide-in {
+  animation: slideIn 0.3s ease-out;
+  will-change: transform, opacity;
+}
+
+/* Optimize hover transitions - use transform instead of position changes */
+.hover-lift {
+  transition: transform 0.3s ease, box-shadow 0.3s ease;
+  will-change: transform;
+}
+
+.hover-lift:hover {
+  transform: translateY(-4px);
+}
+
+/* Optimize scale transitions */
+.hover-scale {
+  transition: transform 0.3s ease;
+  will-change: transform;
+}
+
+.hover-scale:hover {
+  transform: scale(1.05);
+}

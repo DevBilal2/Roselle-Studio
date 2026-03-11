@@ -8,18 +8,28 @@
 // Function to login customer and get access token
 // Add to lib/shopify.js
 // lib/shopify.js
-// const SHOPIFY_STORE_DOMAIN = process.env.NEXT_PUBLIC_SHOPIFY_STORE_DOMAIN;
-// const SHOPIFY_ADMIN_TOKEN = process.env.SHOPIFY_ADMIN_API_TOKEN;
-// lib/shopify.js
+
+// 1. Define these ONCE at the top of the file
+const SHOPIFY_STORE_DOMAIN = process.env.NEXT_PUBLIC_SHOPIFY_STORE_DOMAIN;
+const SHOPIFY_STOREFRONT_TOKEN = process.env.NEXT_PUBLIC_STOREFRONT_API_TOKEN;
+const SHOPIFY_ADMIN_TOKEN = process.env.SHOPIFY_ADMIN_API_TOKEN;
+
+// 2. Add a quick helper to prevent 401s
+const storefrontHeaders = {
+  "Content-Type": "application/json",
+  "X-Shopify-Storefront-Access-Token": SHOPIFY_STOREFRONT_TOKEN,
+};
+
+const adminHeaders = {
+  "Content-Type": "application/json",
+  "X-Shopify-Access-Token": SHOPIFY_ADMIN_TOKEN,
+};
+
 export async function fetchShopifyProducts(
   limit = 12,
   collectionHandle = null
 ) {
-  const SHOPIFY_STORE_DOMAIN = process.env.NEXT_PUBLIC_SHOPIFY_STORE_DOMAIN;
-  const SHOPIFY_STOREFRONT_TOKEN = process.env.NEXT_PUBLIC_STOREFRONT_API_TOKEN;
-
   if (!SHOPIFY_STORE_DOMAIN || !SHOPIFY_STOREFRONT_TOKEN) {
-    console.error("Missing Shopify environment variables");
     return [];
   }
 
@@ -47,6 +57,13 @@ export async function fetchShopifyProducts(
                   minVariantPrice {
                     amount
                     currencyCode
+                  }
+                }
+                variants(first: 1) {
+                  edges {
+                    node {
+                      id
+                    }
                   }
                 }
                 tags
@@ -78,6 +95,13 @@ export async function fetchShopifyProducts(
                   currencyCode
                 }
               }
+              variants(first: 1) {
+                edges {
+                  node {
+                    id
+                  }
+                }
+              }
               tags
               totalInventory
             }
@@ -92,10 +116,7 @@ export async function fetchShopifyProducts(
       `https://${SHOPIFY_STORE_DOMAIN}/api/2024-01/graphql.json`,
       {
         method: "POST",
-        headers: {
-          "Content-Type": "application/json",
-          "X-Shopify-Storefront-Access-Token": SHOPIFY_STOREFRONT_TOKEN,
-        },
+        headers: storefrontHeaders,
         body: JSON.stringify({ query, variables }),
         // Cache for 5 minutes to reduce API calls and improve performance
         next: { revalidate: 300 },
@@ -104,7 +125,7 @@ export async function fetchShopifyProducts(
     );
 
     if (!response.ok) {
-      throw new Error(`Shopify API error: ${response.statusText}`);
+      throw new Error(`Shopify API error: ${response.statusText} (${response.status})`);
     }
 
     const result = await response.json();
@@ -123,47 +144,65 @@ export async function fetchShopifyProducts(
     }
 
     // Transform the data to match your expected format
-    return productsData.map((edge) => ({
-      id: edge.node.id,
-      Heading: edge.node.title, // Your app expects "Heading"
-      description: edge.node.description,
-      price: `$${edge.node.priceRange?.minVariantPrice?.amount || "0"}`,
-      currency: edge.node.priceRange?.minVariantPrice?.currencyCode || "USD",
-      tags: edge.node.tags || [],
-      inStock: edge.node.totalInventory > 0,
-      image: edge.node.featuredImage?.url || null,
-      altText: edge.node.featuredImage?.altText || edge.node.title,
-      handle: edge.node.handle,
-    }));
+    const products = productsData.map((edge) => {
+      const variantId = edge.node.variants?.edges?.[0]?.node?.id || null;
+      return {
+        id: edge.node.id,
+        variantId, // for Shopify order creation (GID, e.g. gid://shopify/ProductVariant/123)
+        Heading: edge.node.title, // Your app expects "Heading"
+        description: edge.node.description,
+        price: `$${edge.node.priceRange?.minVariantPrice?.amount || "0"}`,
+        currency: edge.node.priceRange?.minVariantPrice?.currencyCode || "USD",
+        tags: edge.node.tags || [],
+        inStock: edge.node.totalInventory > 0,
+        image: edge.node.featuredImage?.url || null,
+        altText: edge.node.featuredImage?.altText || edge.node.title,
+        handle: edge.node.handle,
+      };
+    });
+    
+    console.log("Shopify Products Response:", products);
+    return products;
   } catch (error) {
     console.error("Error fetching Shopify products:", error);
     return [];
   }
 }
-export async function createOrder(orderData) {
-  const SHOPIFY_STORE_DOMAIN = process.env.NEXT_PUBLIC_SHOPIFY_STORE_DOMAIN;
-  const SHOPIFY_ADMIN_TOKEN = process.env.SHOPIFY_ADMIN_API_TOKEN;
+/** Extract numeric variant ID from Shopify GID (e.g. gid://shopify/ProductVariant/123 -> 123) */
+function variantGidToNumericId(gid) {
+  if (!gid || typeof gid !== "string") return null;
+  const parts = gid.split("/");
+  const last = parts[parts.length - 1];
+  const num = parseInt(last, 10);
+  return Number.isNaN(num) ? null : num;
+}
 
+export async function createOrder(orderData) {
   if (!SHOPIFY_STORE_DOMAIN || !SHOPIFY_ADMIN_TOKEN) {
-    console.error("Missing Shopify credentials:", {
-      domain: SHOPIFY_STORE_DOMAIN,
-      hasToken: !!SHOPIFY_ADMIN_TOKEN,
-    });
     throw new Error("Shopify API credentials not configured");
   }
 
   try {
-    // Prepare line items (custom line items - no variant IDs needed)
-    const lineItems = orderData.items.map((item) => ({
-      title: item.name,
-      price: item.price.toString(),
-      quantity: item.quantity,
-      properties: [
-        { name: "product_id", value: item.id.toString() },
-        { name: "product_name", value: item.name },
-        ...(item.image ? [{ name: "image_url", value: item.image }] : []),
-      ],
-    }));
+    // Prepare line items: use variant_id when available (so orders show in Shopify), else custom line item
+    const lineItems = orderData.items.map((item) => {
+      const variantNumericId = item.variantId ? variantGidToNumericId(item.variantId) : null;
+      if (variantNumericId) {
+        return {
+          variant_id: variantNumericId,
+          quantity: item.quantity,
+        };
+      }
+      return {
+        title: item.name,
+        price: item.price.toString(),
+        quantity: item.quantity,
+        properties: [
+          { name: "product_id", value: String(item.id) },
+          { name: "product_name", value: item.name },
+          ...(item.image ? [{ name: "image_url", value: item.image }] : []),
+        ],
+      };
+    });
 
     // Prepare shipping address
     const shippingAddress = {
@@ -173,6 +212,7 @@ export async function createOrder(orderData) {
       city: orderData.shipping.city,
       province: orderData.shipping.province,
       country: "Pakistan",
+      country_code: "PK",
       phone: orderData.contact.phone,
       zip: orderData.shipping.zipCode || "",
     };
@@ -181,12 +221,13 @@ export async function createOrder(orderData) {
     const orderPayload = {
       order: {
         email:
-          orderData.contact.email || `order-${Date.now()}@flowersheavenly.com`,
+          orderData.contact.email || `order-${Date.now()}@rosellestudio.com`,
         phone: orderData.contact.phone,
         line_items: lineItems,
         shipping_address: shippingAddress,
         billing_address: shippingAddress,
         financial_status: "pending",
+        currency: "PKR",
         note: orderData.notes || "",
         tags:
           orderData.payment.method === "cod"
@@ -206,15 +247,6 @@ export async function createOrder(orderData) {
             value: orderData.notes || "",
           },
         ],
-        // customer: {
-        //   first_name: orderData.contact.firstName,
-        //   last_name: orderData.contact.lastName || "",
-        //   email:
-        //     orderData.contact.email ||
-        //     `customer-${Date.now()}@flowersheavenly.com`,
-        //   phone: orderData.contact.phone,
-        //   verified_email: true,
-        // },
       },
     };
 
@@ -228,10 +260,7 @@ export async function createOrder(orderData) {
       `https://${SHOPIFY_STORE_DOMAIN}/admin/api/2024-01/orders.json`,
       {
         method: "POST",
-        headers: {
-          "Content-Type": "application/json",
-          "X-Shopify-Access-Token": SHOPIFY_ADMIN_TOKEN,
-        },
+        headers: adminHeaders,
         body: JSON.stringify(orderPayload),
       }
     );
@@ -273,9 +302,6 @@ export async function createSimpleOrder(
   shippingInfo,
   paymentInfo
 ) {
-  const SHOPIFY_STORE_DOMAIN = process.env.NEXT_PUBLIC_SHOPIFY_STORE_DOMAIN;
-  const SHOPIFY_ADMIN_TOKEN = process.env.SHOPIFY_ADMIN_API_TOKEN;
-
   if (!SHOPIFY_STORE_DOMAIN || !SHOPIFY_ADMIN_TOKEN) {
     throw new Error("Missing Shopify credentials");
   }
@@ -325,10 +351,7 @@ export async function createSimpleOrder(
     `https://${SHOPIFY_STORE_DOMAIN}/admin/api/2024-01/orders.json`,
     {
       method: "POST",
-      headers: {
-        "Content-Type": "application/json",
-        "X-Shopify-Access-Token": SHOPIFY_ADMIN_TOKEN,
-      },
+      headers: adminHeaders,
       body: JSON.stringify(orderData),
     }
   );
@@ -390,10 +413,7 @@ export async function getCustomerOrders(accessToken) {
       `https://${SHOPIFY_STORE_DOMAIN}/api/2024-01/graphql.json`,
       {
         method: "POST",
-        headers: {
-          "Content-Type": "application/json",
-          "X-Shopify-Storefront-Access-Token": SHOPIFY_STOREFRONT_TOKEN,
-        },
+        headers: storefrontHeaders,
         body: JSON.stringify({ query, variables }),
       }
     );
@@ -436,10 +456,7 @@ export async function loginCustomer(email, password) {
       `https://${SHOPIFY_STORE_DOMAIN}/api/2024-01/graphql.json`,
       {
         method: "POST",
-        headers: {
-          "Content-Type": "application/json",
-          "X-Shopify-Storefront-Access-Token": SHOPIFY_STOREFRONT_TOKEN,
-        },
+        headers: storefrontHeaders,
         body: JSON.stringify({ query: mutation, variables }),
       }
     );
@@ -485,10 +502,7 @@ export async function getCustomerData(accessToken) {
       `https://${SHOPIFY_STORE_DOMAIN}/api/2024-01/graphql.json`,
       {
         method: "POST",
-        headers: {
-          "Content-Type": "application/json",
-          "X-Shopify-Storefront-Access-Token": SHOPIFY_STOREFRONT_TOKEN,
-        },
+        headers: storefrontHeaders,
         body: JSON.stringify({ query, variables }),
       }
     );
@@ -505,9 +519,11 @@ export async function getCustomerData(accessToken) {
     throw error;
   }
 }
-const SHOPIFY_STORE_DOMAIN = process.env.NEXT_PUBLIC_SHOPIFY_STORE_DOMAIN;
-const SHOPIFY_STOREFRONT_TOKEN = process.env.NEXT_PUBLIC_STOREFRONT_API_TOKEN;
 export async function createCustomerInShopify(customerData) {
+  if (!SHOPIFY_STORE_DOMAIN || !SHOPIFY_STOREFRONT_TOKEN) {
+    console.error("Missing Shopify environment variables for createCustomerInShopify");
+    throw new Error("Shopify API credentials not configured");
+  }
   const mutation = `
     mutation customerCreate($input: CustomerCreateInput!) {
       customerCreate(input: $input) {
@@ -575,10 +591,7 @@ export async function createCustomerInShopify(customerData) {
       `https://${SHOPIFY_STORE_DOMAIN}/api/2024-01/graphql.json`,
       {
         method: "POST",
-        headers: {
-          "Content-Type": "application/json",
-          "X-Shopify-Storefront-Access-Token": SHOPIFY_STOREFRONT_TOKEN,
-        },
+        headers: storefrontHeaders,
         body: JSON.stringify({ query: mutation, variables }),
       }
     );
@@ -589,33 +602,191 @@ export async function createCustomerInShopify(customerData) {
       throw new Error(result.errors[0].message);
     }
 
-    // Handle the "verification email sent" message
-    if (result.data.customerCreate.customer) {
-      const userErrors = result.data.customerCreate.customerUserErrors;
+    const createResult = result.data?.customerCreate;
+    const userErrors = createResult?.customerUserErrors || [];
+    const customer = createResult?.customer;
 
-      // If it's just the email verification message, still return success
-      const isVerificationMessage =
-        userErrors.length > 0 &&
-        userErrors.some((err) => err.message.includes("sent an email"));
-
-      if (isVerificationMessage) {
-        console.log("Note: Verification email was sent to customer");
-        return result.data.customerCreate.customer;
-      }
-
-      // If there are real errors, throw them
-      if (userErrors.length > 0) {
-        throw new Error(userErrors.map((err) => err.message).join(", "));
-      }
-
-      return result.data.customerCreate.customer;
+    if (customer && userErrors.length > 0) {
+      const isVerificationOnly = userErrors.every((e) => e.message?.includes("sent an email"));
+      if (isVerificationOnly) return customer;
     }
-
+    if (userErrors.length > 0) {
+      throw new Error(userErrors.map((e) => e.message).join(", "));
+    }
+    if (customer) return customer;
     throw new Error("Customer creation failed");
   } catch (error) {
     console.error("Shopify customer creation error:", error);
     throw error;
   }
+}
+
+/**
+ * Create a customer with email only (no password) via Admin API, then send account invite.
+ * Customer receives an email to set their password and activate – use for "email-only" signup.
+ * Call from server only (uses SHOPIFY_ADMIN_API_TOKEN).
+ */
+export async function createCustomerWithInviteAdmin(input) {
+  const { email, firstName, lastName, phone } = input;
+  if (!SHOPIFY_STORE_DOMAIN || !SHOPIFY_ADMIN_TOKEN) {
+    throw new Error("Shopify Admin API credentials not configured");
+  }
+  const url = `https://${SHOPIFY_STORE_DOMAIN}/admin/api/2024-01/graphql.json`;
+
+  // 1) Create customer (Admin API – no password)
+  const createMutation = `
+    mutation customerCreate($input: CustomerInput!) {
+      customerCreate(input: $input) {
+        customer { id email firstName lastName phone }
+        userErrors { field message }
+      }
+    }
+  `;
+  const customerInput = {
+    email: email || null,
+    firstName: firstName || null,
+    lastName: lastName || null,
+    phone: phone && phone.trim() !== "" ? formatPhoneForShopify(phone) : null,
+  };
+  const createRes = await fetch(url, {
+    method: "POST",
+    headers: adminHeaders,
+    body: JSON.stringify({
+      query: createMutation,
+      variables: { input: customerInput },
+    }),
+  });
+  const createJson = await createRes.json();
+  if (createJson.errors) {
+    throw new Error(createJson.errors[0].message || "Admin API error");
+  }
+  const userErrors = createJson.data?.customerCreate?.userErrors || [];
+  if (userErrors.length > 0) {
+    throw new Error(userErrors.map((e) => e.message).join(", "));
+  }
+  const customer = createJson.data?.customerCreate?.customer;
+  if (!customer?.id) {
+    throw new Error("Customer creation failed");
+  }
+
+  // 2) Send account invite email (customer sets password via link)
+  const inviteMutation = `
+    mutation customerSendAccountInviteEmail($customerId: ID!) {
+      customerSendAccountInviteEmail(customerId: $customerId) {
+        customer { id }
+        userErrors { field message }
+      }
+    }
+  `;
+  const inviteRes = await fetch(url, {
+    method: "POST",
+    headers: adminHeaders,
+    body: JSON.stringify({
+      query: inviteMutation,
+      variables: { customerId: customer.id },
+    }),
+  });
+  const inviteJson = await inviteRes.json();
+  if (inviteJson.errors) {
+    throw new Error(inviteJson.errors[0].message || "Invite API error");
+  }
+  const inviteErrors = inviteJson.data?.customerSendAccountInviteEmail?.userErrors || [];
+  if (inviteErrors.length > 0) {
+    throw new Error(inviteErrors.map((e) => e.message).join(", "));
+  }
+
+  return { customer: { id: customer.id, email: customer.email, firstName: customer.firstName, lastName: customer.lastName, phone: customer.phone } };
+}
+
+function formatPhoneForShopify(phone) {
+  const digits = String(phone).replace(/\D/g, "");
+  if (digits.startsWith("0")) {
+    return "+92" + digits.substring(1);
+  }
+  if (!digits.startsWith("92") && digits.length <= 10) {
+    return "+92" + digits;
+  }
+  return "+" + digits;
+}
+
+/** Send password recovery email to customer (Storefront API) */
+export async function customerRecover(email) {
+  if (!SHOPIFY_STORE_DOMAIN || !SHOPIFY_STOREFRONT_TOKEN) {
+    throw new Error("Shopify API credentials not configured");
+  }
+  const mutation = `
+    mutation customerRecover($email: String!) {
+      customerRecover(email: $email) {
+        customerUserErrors {
+          code
+          field
+          message
+        }
+      }
+    }
+  `;
+  const response = await fetch(
+    `https://${SHOPIFY_STORE_DOMAIN}/api/2024-01/graphql.json`,
+    {
+      method: "POST",
+      headers: storefrontHeaders,
+      body: JSON.stringify({ query: mutation, variables: { email } }),
+    }
+  );
+  const result = await response.json();
+  if (result.errors) throw new Error(result.errors[0].message);
+  const errors = result.data?.customerRecover?.customerUserErrors || [];
+  if (errors.length > 0) {
+    throw new Error(errors.map((e) => e.message).join(", "));
+  }
+  return true;
+}
+
+/** Update customer profile (firstName, lastName, phone). Requires accessToken. */
+export async function updateCustomerProfile(accessToken, updates) {
+  if (!SHOPIFY_STORE_DOMAIN || !SHOPIFY_STOREFRONT_TOKEN) {
+    throw new Error("Shopify API credentials not configured");
+  }
+  const mutation = `
+    mutation customerUpdate($customerAccessToken: String!, $customer: CustomerUpdateInput!) {
+      customerUpdate(customerAccessToken: $customerAccessToken, customer: $customer) {
+        customer {
+          id
+          firstName
+          lastName
+          email
+          phone
+        }
+        customerUserErrors {
+          code
+          field
+          message
+        }
+      }
+    }
+  `;
+  const customer = {};
+  if (updates.firstName != null) customer.firstName = updates.firstName;
+  if (updates.lastName != null) customer.lastName = updates.lastName;
+  if (updates.phone != null) customer.phone = updates.phone === "" ? null : updates.phone;
+  const response = await fetch(
+    `https://${SHOPIFY_STORE_DOMAIN}/api/2024-01/graphql.json`,
+    {
+      method: "POST",
+      headers: storefrontHeaders,
+      body: JSON.stringify({
+        query: mutation,
+        variables: { customerAccessToken: accessToken, customer },
+      }),
+    }
+  );
+  const result = await response.json();
+  if (result.errors) throw new Error(result.errors[0].message);
+  const errors = result.data?.customerUpdate?.customerUserErrors || [];
+  if (errors.length > 0) {
+    throw new Error(errors.map((e) => e.message).join(", "));
+  }
+  return result.data.customerUpdate.customer;
 }
 
 // Add other Storefront API functions as needed
@@ -644,10 +815,7 @@ export async function getCustomerAccessToken(email, password) {
     `https://${SHOPIFY_STORE_DOMAIN}/api/2024-01/graphql.json`,
     {
       method: "POST",
-      headers: {
-        "Content-Type": "application/json",
-        "X-Shopify-Storefront-Access-Token": SHOPIFY_STOREFRONT_TOKEN,
-      },
+      headers: storefrontHeaders,
       body: JSON.stringify({ query: mutation, variables }),
     }
   );
@@ -657,9 +825,6 @@ export async function getCustomerAccessToken(email, password) {
 }
 
 export async function fetchProductByHandle(handle) {
-  const SHOPIFY_STORE_DOMAIN = process.env.NEXT_PUBLIC_SHOPIFY_STORE_DOMAIN;
-  const SHOPIFY_STOREFRONT_TOKEN = process.env.NEXT_PUBLIC_STOREFRONT_API_TOKEN;
-
   if (!SHOPIFY_STORE_DOMAIN || !SHOPIFY_STOREFRONT_TOKEN) {
     console.error("Missing Shopify environment variables");
     return null;
@@ -729,10 +894,7 @@ export async function fetchProductByHandle(handle) {
       `https://${SHOPIFY_STORE_DOMAIN}/api/2024-01/graphql.json`,
       {
         method: "POST",
-        headers: {
-          "Content-Type": "application/json",
-          "X-Shopify-Storefront-Access-Token": SHOPIFY_STOREFRONT_TOKEN,
-        },
+        headers: storefrontHeaders,
         body: JSON.stringify({ query, variables: { handle } }),
         next: { revalidate: 300 },
         cache: "force-cache",
@@ -759,11 +921,7 @@ export async function fetchProductByHandle(handle) {
 // In app/lib/shopify.js - REPLACE THE EXISTING FUNCTION
 // SIMPLE WORKING VERSION - Use this instead
 export async function fetchShopifyCollections(first = 10) {
-  const SHOPIFY_STORE_DOMAIN = process.env.NEXT_PUBLIC_SHOPIFY_STORE_DOMAIN;
-  const SHOPIFY_STOREFRONT_TOKEN = process.env.NEXT_PUBLIC_STOREFRONT_API_TOKEN;
-
   if (!SHOPIFY_STORE_DOMAIN || !SHOPIFY_STOREFRONT_TOKEN) {
-    console.error("Missing Shopify environment variables");
     return [];
   }
 
@@ -792,10 +950,7 @@ export async function fetchShopifyCollections(first = 10) {
       `https://${SHOPIFY_STORE_DOMAIN}/api/2024-01/graphql.json`,
       {
         method: "POST",
-        headers: {
-          "Content-Type": "application/json",
-          "X-Shopify-Storefront-Access-Token": SHOPIFY_STOREFRONT_TOKEN,
-        },
+        headers: storefrontHeaders,
         body: JSON.stringify({ query, variables: { first } }),
         next: { revalidate: 300 },
         cache: "force-cache",
@@ -803,7 +958,7 @@ export async function fetchShopifyCollections(first = 10) {
     );
 
     if (!response.ok) {
-      throw new Error(`Shopify API error: ${response.statusText}`);
+      throw new Error(`Shopify API error: ${response.statusText} (${response.status})`);
     }
 
     const result = await response.json();
@@ -813,7 +968,7 @@ export async function fetchShopifyCollections(first = 10) {
       return [];
     }
 
-    return result.data.collections.edges.map((edge) => ({
+    const collections = result.data.collections.edges.map((edge) => ({
       id: edge.node.id,
       title: edge.node.title,
       handle: edge.node.handle,
@@ -822,11 +977,78 @@ export async function fetchShopifyCollections(first = 10) {
       altText: edge.node.image?.altText || edge.node.title,
       // Don't include count - we'll calculate it differently
     }));
+    
+    console.log("Shopify Collections Response:", collections);
+    return collections;
   } catch (error) {
     console.error("Error fetching Shopify collections:", error);
     return [];
   }
 }
+
+/** Get a single collection by handle (for collection page title + SEO description) */
+export async function getCollectionByHandle(handle) {
+  if (!SHOPIFY_STORE_DOMAIN || !SHOPIFY_STOREFRONT_TOKEN || !handle) {
+    return null;
+  }
+
+  const query = `
+    query GetCollectionByHandle($handle: String!) {
+      collectionByHandle(handle: $handle) {
+        id
+        title
+        handle
+        description
+        descriptionHtml
+        image {
+          url
+          altText
+        }
+      }
+    }
+  `;
+
+  try {
+    const response = await fetch(
+      `https://${SHOPIFY_STORE_DOMAIN}/api/2024-01/graphql.json`,
+      {
+        method: "POST",
+        headers: storefrontHeaders,
+        body: JSON.stringify({ query, variables: { handle } }),
+        next: { revalidate: 300 },
+        cache: "force-cache",
+      }
+    );
+
+    if (!response.ok) {
+      throw new Error(`Shopify API error: ${response.statusText} (${response.status})`);
+    }
+
+    const result = await response.json();
+
+    if (result.errors) {
+      console.error("GraphQL Errors:", result.errors);
+      return null;
+    }
+
+    const node = result.data?.collectionByHandle;
+    if (!node) return null;
+
+    return {
+      id: node.id,
+      title: node.title,
+      handle: node.handle,
+      description: node.description || "",
+      descriptionHtml: node.descriptionHtml || "",
+      image: node.image?.url || null,
+      altText: node.image?.altText || node.title,
+    };
+  } catch (error) {
+    console.error(`Error fetching collection ${handle}:`, error);
+    return null;
+  }
+}
+
 // export async function fetchShopifyProducts() {
 //   const SHOPIFY_STORE_DOMAIN = process.env.NEXT_PUBLIC_SHOPIFY_STORE_DOMAIN;
 //   const SHOPIFY_STOREFRONT_TOKEN = process.env.NEXT_PUBLIC_STOREFRONT_API_TOKEN;
@@ -915,9 +1137,6 @@ export async function fetchShopifyCollections(first = 10) {
 
 // Fetch blogs from Shopify
 export async function fetchShopifyBlogs(first = 10) {
-  const SHOPIFY_STORE_DOMAIN = process.env.NEXT_PUBLIC_SHOPIFY_STORE_DOMAIN;
-  const SHOPIFY_STOREFRONT_TOKEN = process.env.NEXT_PUBLIC_STOREFRONT_API_TOKEN;
-
   if (!SHOPIFY_STORE_DOMAIN || !SHOPIFY_STOREFRONT_TOKEN) {
     console.error("Missing Shopify environment variables");
     return [];
@@ -942,10 +1161,7 @@ export async function fetchShopifyBlogs(first = 10) {
       `https://${SHOPIFY_STORE_DOMAIN}/api/2024-01/graphql.json`,
       {
         method: "POST",
-        headers: {
-          "Content-Type": "application/json",
-          "X-Shopify-Storefront-Access-Token": SHOPIFY_STOREFRONT_TOKEN,
-        },
+        headers: storefrontHeaders,
         body: JSON.stringify({ query, variables: { first } }),
         next: { revalidate: 300 },
         cache: "force-cache",
@@ -976,9 +1192,6 @@ export async function fetchShopifyBlogs(first = 10) {
 
 // Fetch articles from a specific blog
 export async function fetchShopifyBlogArticles(blogHandle = "news", first = 50) {
-  const SHOPIFY_STORE_DOMAIN = process.env.NEXT_PUBLIC_SHOPIFY_STORE_DOMAIN;
-  const SHOPIFY_STOREFRONT_TOKEN = process.env.NEXT_PUBLIC_STOREFRONT_API_TOKEN;
-
   if (!SHOPIFY_STORE_DOMAIN || !SHOPIFY_STOREFRONT_TOKEN) {
     console.error("Missing Shopify environment variables");
     return [];
@@ -1021,19 +1234,14 @@ export async function fetchShopifyBlogArticles(blogHandle = "news", first = 50) 
       `https://${SHOPIFY_STORE_DOMAIN}/api/2024-01/graphql.json`,
       {
         method: "POST",
-        headers: {
-          "Content-Type": "application/json",
-          "X-Shopify-Storefront-Access-Token": SHOPIFY_STOREFRONT_TOKEN,
-        },
+        headers: storefrontHeaders,
         body: JSON.stringify({ query, variables: { handle: blogHandle, first } }),
         next: { revalidate: 3600 },
       }
     );
 
     if (!response.ok) {
-      const errorText = await response.text();
-      console.error(`Shopify API error: ${response.statusText}`, errorText);
-      throw new Error(`Shopify API error: ${response.statusText}`);
+      throw new Error(`Shopify API error: ${response.statusText} (${response.status})`);
     }
 
     const result = await response.json();
@@ -1063,15 +1271,15 @@ export async function fetchShopifyBlogArticles(blogHandle = "news", first = 50) 
       return [];
     }
 
-    const articles = result.data.blogByHandle.articles.edges;
-    console.log(`Found ${articles.length} articles in blog "${result.data.blogByHandle.title}" (handle: "${result.data.blogByHandle.handle}")`);
+    const articlesData = result.data.blogByHandle.articles.edges;
+    console.log(`Found ${articlesData.length} articles in blog "${result.data.blogByHandle.title}" (handle: "${result.data.blogByHandle.handle}")`);
     
-    if (articles.length === 0) {
+    if (articlesData.length === 0) {
       console.warn(`Blog "${result.data.blogByHandle.title}" exists but has no published articles.`);
     }
 
     // Transform Shopify articles to match the expected blog post format
-    return result.data.blogByHandle.articles.edges.map((edge) => {
+    const articles = articlesData.map((edge) => {
       const article = edge.node;
       const publishedDate = new Date(article.publishedAt);
       const formattedDate = publishedDate.toLocaleDateString("en-US", {
@@ -1103,10 +1311,13 @@ export async function fetchShopifyBlogArticles(blogHandle = "news", first = 50) 
         readTime: `${readTime} min read`,
         category: category,
         tags: article.tags || [],
-        image: article.image?.url || "https://images.unsplash.com/photo-1566438480900-0609be27a4be?w=600",
+        image: article.image?.url || "https://images.unsplash.com/photo-1518895312237-a9e23508077d?w=600",
         featured: article.tags?.some(tag => tag.toLowerCase().includes("featured")) || false,
       };
     });
+    
+    console.log("Shopify Blog Articles Response:", articles);
+    return articles;
   } catch (error) {
     console.error("Error fetching Shopify blog articles:", error);
     return [];
@@ -1115,9 +1326,6 @@ export async function fetchShopifyBlogArticles(blogHandle = "news", first = 50) 
 
 // Fetch a single article by handle
 export async function fetchShopifyArticleByHandle(blogHandle, articleHandle) {
-  const SHOPIFY_STORE_DOMAIN = process.env.NEXT_PUBLIC_SHOPIFY_STORE_DOMAIN;
-  const SHOPIFY_STOREFRONT_TOKEN = process.env.NEXT_PUBLIC_STOREFRONT_API_TOKEN;
-
   if (!SHOPIFY_STORE_DOMAIN || !SHOPIFY_STOREFRONT_TOKEN) {
     console.error("Missing Shopify environment variables");
     return null;
@@ -1155,10 +1363,7 @@ export async function fetchShopifyArticleByHandle(blogHandle, articleHandle) {
       `https://${SHOPIFY_STORE_DOMAIN}/api/2024-01/graphql.json`,
       {
         method: "POST",
-        headers: {
-          "Content-Type": "application/json",
-          "X-Shopify-Storefront-Access-Token": SHOPIFY_STOREFRONT_TOKEN,
-        },
+        headers: storefrontHeaders,
         body: JSON.stringify({ 
           query, 
           variables: { blogHandle, articleHandle } 
@@ -1212,7 +1417,7 @@ export async function fetchShopifyArticleByHandle(blogHandle, articleHandle) {
       readTime: `${readTime} min read`,
       category: category,
       tags: article.tags || [],
-      image: article.image?.url || "https://images.unsplash.com/photo-1566438480900-0609be27a4be?w=600",
+      image: article.image?.url || "https://images.unsplash.com/photo-1518895312237-a9e23508077d?w=600",
       featured: article.tags?.some(tag => tag.toLowerCase().includes("featured")) || false,
     };
   } catch (error) {

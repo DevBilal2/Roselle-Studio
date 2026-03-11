@@ -43,7 +43,7 @@ const ProductGrid = ({ data }) => {
         >
           {/* Image Container - Whole Card */}
           <div
-            className="relative h-80 w-full overflow-hidden bg-gradient-to-br from-stone-50 to-amber-50 cursor-pointer"
+            className="relative w-full aspect-square overflow-hidden bg-gradient-to-br from-stone-50 to-amber-50 cursor-pointer"
             onClick={() => handleViewDetails(item)}
           >
             {/* Image */}
@@ -52,10 +52,10 @@ const ProductGrid = ({ data }) => {
                 src={item.image}
                 alt={item.altText || item.Heading || item.title || "Product"}
                 fill
-                className="object-cover transition-transform duration-700 group-hover:scale-105"
+                className="object-contain object-center"
                 sizes="(max-width: 640px) 100vw, (max-width: 1024px) 50vw, 25vw"
                 loading="lazy"
-                quality={75}
+                quality={70}
                 // Mobile optimization: serve smaller WebP/AVIF images
                 placeholder="blur"
                 blurDataURL="data:image/jpeg;base64,/9j/4AAQSkZJRgABAQAAAQABAAD/2wBDAAYEBQYFBAYGBQYHBwYIChAKCgkJChQODwwQFxQYGBcUFhYaHSUfGhsjHBYWICwgIyYnKSopGR8tMC0oMCUoKSj/2wBDAQcHBwoIChMKChMoGhYaKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCj/wAARCAAIAAoDASIAAhEBAxEB/8QAFQABAQAAAAAAAAAAAAAAAAAAAAv/xAAhEAACAQMDBQAAAAAAAAAAAAABAgMABAUGIWGRkqGx0f/EABUBAQEAAAAAAAAAAAAAAAAAAAMF/8QAGhEAAgIDAAAAAAAAAAAAAAAAAAECEgMRkf/aAAwDAQACEQMRAD8AltJagyeH0AthI5xdrLcNM91BF5pX2HaH9bcfaSXWGaRmknyJckliyjqTzSlT54b6bk+h0R//2Q=="

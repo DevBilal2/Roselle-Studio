@@ -1,4 +1,5 @@
 import React from "react";
+import Image from "next/image";
 import {
   Facebook,
   Instagram,
@@ -18,9 +19,9 @@ export const Footer = () => {
         <div className="flex flex-col gap-6 w-full lg:w-[35%]">
           {/* Logo */}
           <div className="flex items-center gap-3">
-            <div className="text-3xl">🌸</div>
-            <div className="text-3xl font-bold bg-gradient-to-r from-stone-700 to-stone-900 bg-clip-text text-transparent">
-              Roselle Studio
+            <Image src="/image.png" alt="Rosélle Studio" width={40} height={40} className="object-contain" unoptimized />
+            <div className="text-2xl md:text-3xl font-bold bg-gradient-to-r from-stone-700 to-stone-900 bg-clip-text text-transparent">
+              Rosélle Studio
             </div>
           </div>
 
@@ -187,9 +188,9 @@ export const Footer = () => {
                   <Phone size={18} className="text-amber-600 mt-0.5" />
                   <div>
                     <p className="text-sm text-stone-600">Call us at</p>
-                    <p className="font-medium text-stone-800">
-                      +1 (555) 123-4567
-                    </p>
+                    <a href="tel:+923436951448" className="font-medium text-stone-800 hover:text-amber-600 transition-colors">
+                      +92 343 6951448
+                    </a>
                   </div>
                 </div>
 
@@ -197,18 +198,18 @@ export const Footer = () => {
                   <Mail size={18} className="text-amber-600 mt-0.5" />
                   <div>
                     <p className="text-sm text-stone-600">Email us at</p>
-                    <p className="font-medium text-stone-800">
-                      hello@bloomcraft.com
-                    </p>
+                    <a href="mailto:rosellestudioofficial@gmail.com" className="font-medium text-stone-800 hover:text-amber-600 transition-colors">
+                      rosellestudioofficial@gmail.com
+                    </a>
                   </div>
                 </div>
 
                 <div className="flex items-start gap-3">
                   <MapPin size={18} className="text-amber-600 mt-0.5" />
                   <div>
-                    <p className="text-sm text-stone-600">Visit our shop</p>
+                    <p className="text-sm text-stone-600">Based in</p>
                     <p className="font-medium text-stone-800">
-                      123 Floral Lane, Bloomington
+                      Lahore, Pakistan
                     </p>
                   </div>
                 </div>
@@ -265,9 +266,9 @@ export const Footer = () => {
       <div className="border-t border-stone-200 mt-12 pt-8">
         <div className="flex flex-col sm:flex-row justify-between items-center gap-4">
           <div className="flex items-center gap-2">
-            <span className="text-2xl">🌸</span>
+            <Image src="/image.png" alt="Rosélle Studio" width={24} height={24} className="object-contain" unoptimized />
             <p className="text-stone-700">
-              © 2024 BloomCraft. All flowers are loved.
+              © 2025 Rosélle Studio. All rights reserved.
             </p>
           </div>
 

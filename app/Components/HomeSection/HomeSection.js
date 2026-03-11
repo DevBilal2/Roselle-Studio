@@ -1,4 +1,3 @@
-import React from "react";
 import dynamic from "next/dynamic";
 
 // Lazy load the slider component (client component)
