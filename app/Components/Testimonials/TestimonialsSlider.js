@@ -52,7 +52,7 @@ export default function TestimonialsSlider({ testimonials }) {
           dynamicBullets: true,
           el: ".custom-pagination",
         }}
-        loop={testimonials.length > 3}
+        loop={true}
         onSwiper={(swiper) => {
           swiperRef.current = swiper;
         }}

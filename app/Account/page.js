@@ -20,7 +20,7 @@ import {
   AlertCircle,
 } from "lucide-react";
 import { checkAuthStatus, logout } from "../lib/auth";
-import { getCustomerOrders } from "../lib/shopify";
+import { getCustomerOrders, updateCustomerProfile } from "../lib/shopify";
 import Link from "next/link";
 
 export default function AccountPage() {
@@ -37,7 +37,7 @@ export default function AccountPage() {
     const authUser = checkAuthStatus();
 
     if (!authUser) {
-      router.push("/login");
+      router.push("/register");
       return;
     }
 
@@ -74,8 +74,21 @@ export default function AccountPage() {
     router.push("/login");
   };
 
-  const handleSaveProfile = () => {
+  const handleSaveProfile = async () => {
     const updatedUser = { ...user, ...editForm };
+    if (user.accessToken) {
+      try {
+        const phoneVal = editForm.phone === "Not provided" ? "" : (editForm.phone || "");
+        await updateCustomerProfile(user.accessToken, {
+          firstName: editForm.firstName,
+          lastName: editForm.lastName,
+          phone: phoneVal,
+        });
+      } catch (err) {
+        alert("Could not update profile in Shopify: " + (err.message || "Please try again."));
+        return;
+      }
+    }
     localStorage.setItem("bloomcraft_user", JSON.stringify(updatedUser));
     setUser(updatedUser);
     setIsEditing(false);

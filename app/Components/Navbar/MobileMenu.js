@@ -1,60 +1,29 @@
 "use client";
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import Link from "next/link";
-import { ChevronDown, ChevronRight } from "lucide-react";
-
-const featuredCategories = [
-  {
-    title: "By Occasion",
-    items: [
-      { name: "Birthday Flowers", href: "/allproducts?category=birthday" },
-      { name: "Anniversary Bouquets", href: "/allproducts?category=anniversary" },
-      { name: "Wedding Flowers", href: "/allproducts?category=wedding" },
-      { name: "Sympathy & Funeral", href: "/allproducts?category=sympathy" },
-      { name: "Congratulations", href: "/allproducts?category=congratulations" },
-    ],
-  },
-  {
-    title: "By Type",
-    items: [
-      { name: "Fresh Cut Flowers", href: "/allproducts?type=fresh" },
-      { name: "Potted Plants", href: "/allproducts?type=potted" },
-      { name: "Succulents", href: "/allproducts?type=succulents" },
-      { name: "Seasonal Arrangements", href: "/allproducts?type=seasonal" },
-      { name: "Dried Flowers", href: "/allproducts?type=dried" },
-    ],
-  },
-  {
-    title: "Collections",
-    items: [
-      { name: "Best Sellers", href: "/allproducts?collection=bestsellers" },
-      { name: "New Arrivals", href: "/allproducts?collection=new" },
-      { name: "Premium Luxury", href: "/allproducts?collection=premium" },
-      { name: "Budget Friendly", href: "/allproducts?collection=budget" },
-      { name: "Custom Designs", href: "/allproducts?collection=custom" },
-    ],
-  },
-  {
-    title: "Special Offers",
-    items: [
-      { name: "Weekly Specials", href: "/allproducts?offer=weekly" },
-      { name: "Clearance Sale", href: "/allproducts?offer=clearance" },
-      { name: "Subscription Plans", href: "/subscriptions" },
-      { name: "Gift Packages", href: "/allproducts?type=gift-packages" },
-      { name: "Corporate Orders", href: "/corporate" },
-    ],
-  },
-];
+import { ChevronDown } from "lucide-react";
 
 export default function MobileMenu({ navLinks }) {
   const [open, setOpen] = useState(false);
   const [featuredOpen, setFeaturedOpen] = useState(false);
+  const [collections, setCollections] = useState([]);
+  const [loading, setLoading] = useState(false);
+
+  useEffect(() => {
+    if (!featuredOpen) return;
+    setLoading(true);
+    fetch("/api/collections")
+      .then((res) => (res.ok ? res.json() : []))
+      .then((data) => setCollections(Array.isArray(data) ? data : []))
+      .catch(() => setCollections([]))
+      .finally(() => setLoading(false));
+  }, [featuredOpen]);
 
   return (
     <>
       {/* MENU BUTTON */}
       <button
-        className="p-2 text-stone-900"
+        className="p-2 text-green-800"
         aria-label={open ? "Close menu" : "Open menu"}
         aria-expanded={open}
         aria-controls="mobile-menu"
@@ -90,14 +59,14 @@ export default function MobileMenu({ navLinks }) {
                 className="
                   flex items-center gap-3
                   px-3 py-2 rounded-lg
-                  text-stone-900 font-medium
-                  hover:bg-stone-200/50
+                  text-green-800 font-medium
+                  hover:bg-green-50
                   transition-all duration-200
                 "
                 onClick={() => setOpen(false)}
               >
                 {link.icon && (
-                  <link.icon size={16} className="text-stone-700" />
+                  <link.icon size={16} className="text-green-700" />
                 )}
                 {link.name}
               </a>
@@ -111,8 +80,8 @@ export default function MobileMenu({ navLinks }) {
               className="
                 w-full flex items-center justify-between
                 px-3 py-2 rounded-lg
-                text-stone-900 font-medium
-                hover:bg-stone-200/50
+                text-green-800 font-medium
+                hover:bg-green-50
                 transition-all duration-200
               "
             >
@@ -121,37 +90,36 @@ export default function MobileMenu({ navLinks }) {
               </span>
               <ChevronDown
                 size={16}
-                className={`text-stone-600 transition-transform duration-200 ${
+                className={`text-green-700 transition-transform duration-200 ${
                   featuredOpen ? "rotate-180" : ""
                 }`}
               />
             </button>
             
             {featuredOpen && (
-              <div className="mt-2 px-3 space-y-3 max-h-96 overflow-y-auto">
-                {featuredCategories.map((category, index) => (
-                  <div key={index} className="space-y-2">
-                    <h4 className="text-xs font-bold text-stone-700 uppercase tracking-wider">
-                      {category.title}
-                    </h4>
-                    <ul className="space-y-1 pl-2">
-                      {category.items.map((item, itemIndex) => (
-                        <li key={itemIndex}>
-                          <Link
-                            href={item.href}
-                            className="block text-sm text-stone-600 hover:text-stone-800 hover:bg-stone-50 px-2 py-1.5 rounded transition-colors"
-                            onClick={() => {
-                              setOpen(false);
-                              setFeaturedOpen(false);
-                            }}
-                          >
-                            {item.name}
-                          </Link>
-                        </li>
-                      ))}
-                    </ul>
-                  </div>
-                ))}
+              <div className="mt-2 px-3 space-y-2 max-h-96 overflow-y-auto">
+                {loading ? (
+                  <p className="text-sm text-stone-500 py-2">Loading…</p>
+                ) : collections.length === 0 ? (
+                  <p className="text-sm text-stone-500 py-2">No collections yet.</p>
+                ) : (
+                  <ul className="space-y-1 pl-2">
+                    {collections.map((c) => (
+                      <li key={c.id || c.handle}>
+                        <Link
+                          href={`/collections/${c.handle}`}
+                          className="block text-sm text-green-800 hover:text-green-700 hover:bg-green-50 px-2 py-1.5 rounded transition-colors"
+                          onClick={() => {
+                            setOpen(false);
+                            setFeaturedOpen(false);
+                          }}
+                        >
+                          {c.title}
+                        </Link>
+                      </li>
+                    ))}
+                  </ul>
+                )}
               </div>
             )}
           </li>

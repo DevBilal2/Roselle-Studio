@@ -15,88 +15,7 @@ export default async function CollectionsSection() {
   const collectionData =
     collections.length > 0
       ? collections
-      : [
-          {
-            id: 1,
-            title: "Wedding Collection",
-            image: "/api/placeholder/800/500",
-            subtitle: "Elegant floral arrangements",
-            count: "24 premium designs",
-            bgColor:
-              "bg-gradient-to-br from-stone-900/90 via-stone-900/50 to-amber-900/30",
-            handle: "wedding", // Added handle
-          },
-          {
-            id: 2,
-            title: "Seasonal Blooms",
-            image: "/api/placeholder/800/500",
-            subtitle: "Nature-inspired designs",
-            count: "18 seasonal items",
-            bgColor:
-              "bg-gradient-to-br from-amber-900/90 via-amber-900/50 to-stone-900/30",
-            handle: "seasonal", // Added handle
-          },
-          {
-            id: 3,
-            title: "Premium Arrangements",
-            image: "/api/placeholder/800/500",
-            subtitle: "Luxury floral masterpieces",
-            count: "32 luxury pieces",
-            bgColor:
-              "bg-gradient-to-br from-stone-800/90 via-stone-800/50 to-amber-800/30",
-            handle: "premium", // Added handle
-          },
-          {
-            id: 4,
-            title: "Custom Designs",
-            image: "/api/placeholder/800/500",
-            subtitle: "Personalized creations",
-            count: "15 custom options",
-            bgColor:
-              "bg-gradient-to-br from-amber-800/90 via-amber-800/50 to-stone-800/30",
-            handle: "custom", // Added handle
-          },
-          {
-            id: 5,
-            title: "Home Decor",
-            image: "/api/placeholder/800/500",
-            subtitle: "Beautiful living spaces",
-            count: "22 decor items",
-            bgColor:
-              "bg-gradient-to-br from-stone-700/90 via-stone-700/50 to-amber-700/30",
-            handle: "home-decor", // Added handle
-          },
-          {
-            id: 6,
-            title: "Gift Collections",
-            image: "/api/placeholder/800/500",
-            subtitle: "Perfect floral gifts",
-            count: "28 gift options",
-            bgColor:
-              "bg-gradient-to-br from-amber-700/90 via-amber-700/50 to-stone-700/30",
-            handle: "gift", // Added handle
-          },
-          {
-            id: 7,
-            title: "Anniversary Specials",
-            image: "/api/placeholder/800/500",
-            subtitle: "Romantic milestone blooms",
-            count: "16 anniversary designs",
-            bgColor:
-              "bg-gradient-to-br from-stone-900/90 via-amber-900/50 to-stone-800/30",
-            handle: "anniversary", // Added handle
-          },
-          {
-            id: 8,
-            title: "Office Elegance",
-            image: "/api/placeholder/800/500",
-            subtitle: "Professional workplace decor",
-            count: "20 office pieces",
-            bgColor:
-              "bg-gradient-to-br from-amber-800/90 via-stone-800/50 to-amber-700/30",
-            handle: "office", // Added handle
-          },
-        ];
+      : [];
 
   return (
     <section className="py-20 bg-gradient-to-b from-stone-50 to-white">
@@ -137,8 +56,7 @@ export default async function CollectionsSection() {
                         sizes="(max-width: 640px) 100vw, (max-width: 1024px) 50vw, 25vw"
                         loading={collection.id === 1 ? "eager" : "lazy"}
                         priority={collection.id === 1}
-                        quality={75}
-                        // Mobile optimization: serve smaller images
+                        quality={70}
                         placeholder="blur"
                         blurDataURL="data:image/jpeg;base64,/9j/4AAQSkZJRgABAQAAAQABAAD/2wBDAAYEBQYFBAYGBQYHBwYIChAKCgkJChQODwwQFxQYGBcUFhYaHSUfGhsjHBYWICwgIyYnKSopGR8tMC0oMCUoKSj/2wBDAQcHBwoIChMKChMoGhYaKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCj/wAARCAAIAAoDASIAAhEBAxEB/8QAFQABAQAAAAAAAAAAAAAAAAAAAAv/xAAhEAACAQMDBQAAAAAAAAAAAAABAgMABAUGIWGRkqGx0f/EABUBAQEAAAAAAAAAAAAAAAAAAAMF/8QAGhEAAgIDAAAAAAAAAAAAAAAAAAECEgMRkf/aAAwDAQACEQMRAD8AltJagyeH0AthI5xdrLcNM91BF5pX2HaH9bcfaSXWGaRmknyJckliyjqTzSlT54b6bk+h0R//2Q=="
                       />

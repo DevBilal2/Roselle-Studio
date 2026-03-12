@@ -5,29 +5,26 @@ import { useRouter } from "next/navigation";
 import {
   Flower2,
   Mail,
-  Lock,
   User,
-  Phone,
   ArrowRight,
-  Eye,
-  EyeOff,
   ChevronLeft,
   Check,
   AlertCircle,
 } from "lucide-react";
-import { createCustomerInShopify } from "../lib/shopify";
+import { createCustomerInShopify, loginCustomer, getCustomerData } from "../lib/shopify";
+
+function randomPassword(length = 12) {
+  const chars = "abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789!@#$%";
+  let s = "";
+  for (let i = 0; i < length; i++) s += chars.charAt(Math.floor(Math.random() * chars.length));
+  return s;
+}
 
 export default function RegisterPage() {
   const router = useRouter();
-  const [showPassword, setShowPassword] = useState(false);
   const [formData, setFormData] = useState({
-    firstName: "",
-    lastName: "",
+    name: "",
     email: "",
-    phone: "",
-    password: "",
-    confirmPassword: "",
-    acceptsMarketing: false,
   });
   const [isLoading, setIsLoading] = useState(false);
   const [errors, setErrors] = useState({});
@@ -36,18 +33,9 @@ export default function RegisterPage() {
 
   const validateForm = () => {
     const newErrors = {};
-
-    if (!formData.firstName.trim())
-      newErrors.firstName = "First name is required";
     if (!formData.email.trim()) newErrors.email = "Email is required";
-    else if (!/\S+@\S+\.\S+/.test(formData.email))
+    else if (!/\S+@\S+\.\S+/.test(formData.email.trim()))
       newErrors.email = "Invalid email format";
-    if (!formData.password) newErrors.password = "Password is required";
-    else if (formData.password.length < 6)
-      newErrors.password = "Password must be at least 6 characters";
-    if (formData.password !== formData.confirmPassword)
-      newErrors.confirmPassword = "Passwords do not match";
-
     setErrors(newErrors);
     return Object.keys(newErrors).length === 0;
   };
@@ -61,74 +49,61 @@ export default function RegisterPage() {
     setIsLoading(true);
 
     try {
-      const nameParts = formData.name ? formData.name.split(" ") : [];
-      const firstName = nameParts[0] || formData.firstName;
-      const lastName = nameParts.slice(1).join(" ") || formData.lastName || "";
-
+      const nameParts = (formData.name || "").trim().split(/\s+/);
+      const firstName = nameParts[0] || "";
+      const lastName = nameParts.slice(1).join(" ") || "";
+      const password = randomPassword(12);
       const customerData = {
-        email: formData.email,
-        password: formData.password,
-        firstName: firstName,
-        lastName: lastName,
-        phone: formData.phone || "",
-        acceptsMarketing: formData.acceptsMarketing,
+        email: formData.email.trim(),
+        password,
+        firstName,
+        lastName,
+        phone: "",
+        acceptsMarketing: false,
       };
 
-      console.log("Creating customer in Shopify:", customerData);
+      await createCustomerInShopify(customerData);
 
-      const shopifyCustomer = await createCustomerInShopify(customerData);
-
-      console.log("Shopify customer created:", shopifyCustomer);
-
-      const userData = {
-        id: shopifyCustomer.id || `shopify_${Date.now()}`,
-        shopifyId: shopifyCustomer.id,
-        firstName: firstName,
-        lastName: lastName,
-        email: formData.email,
-        phone: formData.phone || "Not provided",
-        createdAt: new Date().toISOString(),
-      };
-
-      localStorage.setItem("bloomcraft_user", JSON.stringify(userData));
-      localStorage.setItem("bloomcraft_logged_in", "true");
-      localStorage.setItem("bloomcraft_token", `shopify_${Date.now()}`);
-
+      try {
+        const tokenData = await loginCustomer(formData.email.trim(), password);
+        if (tokenData?.accessToken) {
+          const customerData = await getCustomerData(tokenData.accessToken);
+          const userData = {
+            id: customerData.id,
+            shopifyId: customerData.id,
+            firstName: customerData.firstName || "",
+            lastName: customerData.lastName || "",
+            email: customerData.email,
+            phone: customerData.phone || "",
+            acceptsMarketing: customerData.acceptsMarketing || false,
+            createdAt: customerData.createdAt,
+            accessToken: tokenData.accessToken,
+            tokenExpires: tokenData.expiresAt,
+          };
+          if (typeof window !== "undefined") {
+            localStorage.setItem("bloomcraft_user", JSON.stringify(userData));
+            localStorage.setItem("bloomcraft_logged_in", "true");
+            localStorage.setItem("bloomcraft_token", tokenData.accessToken);
+          }
+          setSuccess(true);
+          router.replace("/Account");
+          return;
+        }
+      } catch (_) {}
       setSuccess(true);
-
-      setTimeout(() => {
-        router.push("/Account");
-      }, 1500);
     } catch (error) {
-      console.error("Registration failed:", error);
-
       if (
-        error.message.includes("already exists") ||
-        error.message.includes("taken")
+        error.message?.includes("already exists") ||
+        error.message?.toLowerCase().includes("taken")
       ) {
         setShopifyError(
-          "This email is already registered. Please use a different email or try logging in."
+          "This email is already registered. Please sign in or use a different email."
         );
-      } else if (error.message.includes("invalid")) {
-        setShopifyError(
-          "Invalid email format. Please check your email address."
-        );
+      } else if (error.message?.includes("invalid")) {
+        setShopifyError("Invalid email format. Please check your email address.");
       } else {
-        setShopifyError(
-          `Registration failed: ${error.message}. Please try again.`
-        );
+        setShopifyError(error.message || "Registration failed. Please try again.");
       }
-
-      const userData = {
-        id: Date.now(),
-        name: formData.name,
-        email: formData.email,
-        phone: formData.phone || "Not provided",
-        createdAt: new Date().toISOString(),
-        shopifyError: true,
-      };
-      localStorage.setItem("bloomcraft_user", JSON.stringify(userData));
-      localStorage.setItem("bloomcraft_logged_in", "true");
     } finally {
       setIsLoading(false);
     }
@@ -176,11 +151,18 @@ export default function RegisterPage() {
                 </div>
                 <div>
                   <h3 className="font-semibold text-green-800">
-                    Account Created Successfully!
+                    Rosélle Studio account created
                   </h3>
-                  <p className="text-green-600 text-sm">
-                    Redirecting to your account...
+                  <p className="text-green-600 text-sm mt-1">
+                    Your account was created. Use the link below if you need to sign in later.
                   </p>
+                  <Link
+                    href="/login"
+                    className="inline-flex items-center gap-2 mt-3 text-green-700 font-medium hover:text-green-800 text-sm"
+                  >
+                    <span>Go to sign in</span>
+                    <ArrowRight size={16} />
+                  </Link>
                 </div>
               </div>
             </div>
@@ -203,6 +185,8 @@ export default function RegisterPage() {
 
           {/* Main content */}
           <div className="p-8">
+            {!success && (
+              <>
             {/* Header */}
             <div className="text-center mb-8">
               <div className="inline-flex items-center justify-center w-16 h-16 bg-gradient-to-r from-stone-100 to-amber-100 rounded-full mb-4 border border-stone-200">
@@ -211,64 +195,38 @@ export default function RegisterPage() {
               <h1 className="text-3xl font-bold text-stone-800 mb-2">
                 Create Account
               </h1>
+              <p className="text-stone-600 text-sm">
+                Enter your name and email. We&apos;ll create your account and sign you in.
+              </p>
             </div>
 
             {/* Form */}
             <form onSubmit={handleSubmit} className="space-y-5">
-              {/* First Name & Last Name */}
-              <div className="grid grid-cols-2 gap-4">
-                <div>
-                  <label className="block text-sm font-medium text-stone-800 mb-2">
-                    First Name *
-                  </label>
-                  <div className="relative">
-                    <User
-                      className="absolute left-3 top-1/2 transform -translate-y-1/2 text-stone-400"
-                      size={18}
-                    />
-                    <input
-                      type="text"
-                      name="firstName"
-                      value={formData.firstName}
-                      onChange={handleChange}
-                      className={`w-full pl-10 pr-4 py-3 border ${
-                        errors.firstName ? "border-red-300" : "border-stone-200"
-                      } rounded-xl focus:ring-2 focus:ring-stone-300 focus:border-transparent text-stone-800`}
-                      placeholder="First name"
-                    />
-                  </div>
-                  {errors.firstName && (
-                    <p className="mt-1 text-sm text-red-500">
-                      {errors.firstName}
-                    </p>
-                  )}
-                </div>
-
-                <div>
-                  <label className="block text-sm font-medium text-stone-800 mb-2">
-                    Last Name
-                  </label>
-                  <div className="relative">
-                    <User
-                      className="absolute left-3 top-1/2 transform -translate-y-1/2 text-stone-400"
-                      size={18}
-                    />
-                    <input
-                      type="text"
-                      name="lastName"
-                      value={formData.lastName}
-                      onChange={handleChange}
-                      className="w-full pl-10 pr-4 py-3 border border-stone-200 rounded-xl focus:ring-2 focus:ring-stone-300 focus:border-transparent text-stone-800"
-                      placeholder="Last name"
-                    />
-                  </div>
+              {/* Name */}
+              <div>
+                <label className="block text-sm font-medium text-stone-800 mb-2">
+                  Name
+                </label>
+                <div className="relative">
+                  <User
+                    className="absolute left-3 top-1/2 transform -translate-y-1/2 text-stone-400"
+                    size={18}
+                  />
+                  <input
+                    type="text"
+                    name="name"
+                    value={formData.name}
+                    onChange={handleChange}
+                    className="w-full pl-10 pr-4 py-3 border border-stone-200 rounded-xl focus:ring-2 focus:ring-stone-300 focus:border-transparent text-stone-800"
+                    placeholder="Your name"
+                  />
                 </div>
               </div>
 
               {/* Email */}
               <div>
                 <label className="block text-sm font-medium text-stone-800 mb-2">
-                  Email Address *
+                  Email *
                 </label>
                 <div className="relative">
                   <Mail
@@ -291,108 +249,6 @@ export default function RegisterPage() {
                 )}
               </div>
 
-              {/* Phone */}
-              <div>
-                <label className="block text-sm font-medium text-stone-800 mb-2">
-                  Phone Number (Optional)
-                </label>
-                <div className="relative">
-                  <Phone
-                    className="absolute left-3 top-1/2 transform -translate-y-1/2 text-stone-400"
-                    size={18}
-                  />
-                  <input
-                    type="tel"
-                    name="phone"
-                    value={formData.phone}
-                    onChange={handleChange}
-                    className="w-full pl-10 pr-4 py-3 border border-stone-200 rounded-xl focus:ring-2 focus:ring-stone-300 focus:border-transparent text-stone-800"
-                    placeholder="+92 300 1234567"
-                  />
-                </div>
-              </div>
-
-              {/* Password */}
-              <div>
-                <label className="block text-sm font-medium text-stone-800 mb-2">
-                  Password *
-                </label>
-                <div className="relative">
-                  <Lock
-                    className="absolute left-3 top-1/2 transform -translate-y-1/2 text-stone-400"
-                    size={18}
-                  />
-                  <input
-                    type={showPassword ? "text" : "password"}
-                    name="password"
-                    value={formData.password}
-                    onChange={handleChange}
-                    className={`w-full pl-10 pr-12 py-3 border ${
-                      errors.password ? "border-red-300" : "border-stone-200"
-                    } rounded-xl focus:ring-2 focus:ring-stone-300 focus:border-transparent text-stone-800`}
-                    placeholder="At least 6 characters"
-                  />
-                  <button
-                    type="button"
-                    onClick={() => setShowPassword(!showPassword)}
-                    className="absolute right-3 top-1/2 transform -translate-y-1/2 text-stone-400 hover:text-stone-600"
-                  >
-                    {showPassword ? <EyeOff size={18} /> : <Eye size={18} />}
-                  </button>
-                </div>
-                {errors.password && (
-                  <p className="mt-1 text-sm text-red-500">{errors.password}</p>
-                )}
-              </div>
-
-              {/* Confirm Password */}
-              <div>
-                <label className="block text-sm font-medium text-stone-800 mb-2">
-                  Confirm Password *
-                </label>
-                <div className="relative">
-                  <Lock
-                    className="absolute left-3 top-1/2 transform -translate-y-1/2 text-stone-400"
-                    size={18}
-                  />
-                  <input
-                    type={showPassword ? "text" : "password"}
-                    name="confirmPassword"
-                    value={formData.confirmPassword}
-                    onChange={handleChange}
-                    className={`w-full pl-10 pr-4 py-3 border ${
-                      errors.confirmPassword
-                        ? "border-red-300"
-                        : "border-stone-200"
-                    } rounded-xl focus:ring-2 focus:ring-stone-300 focus:border-transparent text-stone-800`}
-                    placeholder="Re-enter your password"
-                  />
-                </div>
-                {errors.confirmPassword && (
-                  <p className="mt-1 text-sm text-red-500">
-                    {errors.confirmPassword}
-                  </p>
-                )}
-              </div>
-
-              {/* Marketing Consent */}
-              <div className="flex items-center">
-                <input
-                  type="checkbox"
-                  id="acceptsMarketing"
-                  name="acceptsMarketing"
-                  checked={formData.acceptsMarketing}
-                  onChange={handleChange}
-                  className="h-4 w-4 text-stone-700 rounded border-stone-300 focus:ring-stone-300"
-                />
-                <label
-                  htmlFor="acceptsMarketing"
-                  className="ml-2 text-sm text-stone-700"
-                >
-                  I want to receive emails about new flowers and special offers
-                </label>
-              </div>
-
               {/* Submit Button */}
               <button
                 type="submit"
@@ -412,29 +268,15 @@ export default function RegisterPage() {
                 )}
               </button>
 
-              {/* Divider */}
-              <div className="relative my-6">
-                <div className="absolute inset-0 flex items-center">
-                  <div className="w-full border-t border-stone-200"></div>
-                </div>
-                <div className="relative flex justify-center text-sm">
-                  <span className="px-4 bg-white text-stone-500">
-                    Already have an account?
-                  </span>
-                </div>
-              </div>
-
-              {/* Login Link */}
-              <div className="text-center">
-                <Link
-                  href="/login"
-                  className="inline-flex items-center gap-2 px-6 py-3 border-2 border-stone-300 text-stone-700 rounded-full hover:bg-stone-50 transition-colors font-medium"
-                >
-                  <span>Sign in to your account</span>
-                  <ArrowRight size={16} />
+              <p className="text-center text-stone-600 text-sm mt-4">
+                Already have an account?{" "}
+                <Link href="/login" className="text-stone-800 font-medium hover:underline">
+                  Sign in
                 </Link>
-              </div>
+              </p>
             </form>
+              </>
+            )}
           </div>
         </div>
       </div>
