@@ -6,7 +6,7 @@ import dynamic from "next/dynamic";
 
 // Lazy load the entire FloatingWhatsApp library to reduce initial bundle
 const FloatingWhatsApp = dynamic(
-  () => import("react-floating-whatsapp").then((mod) => mod.FloatingWhatsApp),
+  () => import("react-floating-whatsapp").then((mod) => mod.default || mod.FloatingWhatsApp),
   { ssr: false }
 );
 
