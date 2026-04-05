@@ -44,6 +44,12 @@ const geistMono = Geist_Mono({
 
 const SITE_URL = process.env.NEXT_PUBLIC_SITE_URL || "https://www.roselle.com.pk";
 
+export const viewport = {
+  width: "device-width",
+  initialScale: 1,
+  maximumScale: 5,
+};
+
 export const metadata = {
   metadataBase: new URL(SITE_URL),
   title: {
@@ -82,6 +88,9 @@ export const metadata = {
   },
   alternates: { canonical: SITE_URL },
   robots: { index: true, follow: true },
+  verification: {
+    google: "yP5qZEXyUfyoIonluGUQswL0xn6Uq5qqsiLdgAo9WeY",
+  },
 };
 
 export default function RootLayout({ children }) {

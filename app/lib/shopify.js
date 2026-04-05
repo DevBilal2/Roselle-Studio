@@ -53,6 +53,14 @@ export async function fetchShopifyProducts(
                   url
                   altText
                 }
+                images(first: 10) {
+                  edges {
+                    node {
+                      url
+                      altText
+                    }
+                  }
+                }
                 priceRange {
                   minVariantPrice {
                     amount
@@ -88,6 +96,14 @@ export async function fetchShopifyProducts(
               featuredImage {
                 url
                 altText
+              }
+              images(first: 10) {
+                edges {
+                  node {
+                    url
+                    altText
+                  }
+                }
               }
               priceRange {
                 minVariantPrice {
@@ -146,6 +162,14 @@ export async function fetchShopifyProducts(
     // Transform the data to match your expected format
     const products = productsData.map((edge) => {
       const variantId = edge.node.variants?.edges?.[0]?.node?.id || null;
+      const galleryUrls = (edge.node.images?.edges || [])
+        .map((e) => e.node?.url)
+        .filter(Boolean);
+      const featuredUrl = edge.node.featuredImage?.url || null;
+      const primaryImage = featuredUrl || galleryUrls[0] || null;
+      const hoverImage =
+        galleryUrls.find((u) => u !== primaryImage) || null;
+
       return {
         id: edge.node.id,
         variantId, // for Shopify order creation (GID, e.g. gid://shopify/ProductVariant/123)
@@ -155,7 +179,8 @@ export async function fetchShopifyProducts(
         currency: edge.node.priceRange?.minVariantPrice?.currencyCode || "USD",
         tags: edge.node.tags || [],
         inStock: edge.node.totalInventory > 0,
-        image: edge.node.featuredImage?.url || null,
+        image: primaryImage,
+        hoverImage,
         altText: edge.node.featuredImage?.altText || edge.node.title,
         handle: edge.node.handle,
       };

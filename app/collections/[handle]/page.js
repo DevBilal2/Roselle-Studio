@@ -58,23 +58,23 @@ export default async function CollectionPage({ params }) {
   return (
     <div className="min-h-screen bg-gradient-to-b from-stone-50 to-white">
       {/* Title on top */}
-      <div className="bg-gradient-to-r from-stone-800 to-stone-900 text-white py-16 px-5">
-        <div className="max-w-7xl mx-auto">
+      <div className="bg-gradient-to-r from-stone-800 to-stone-900 text-white py-12 px-4 sm:py-16 sm:px-5">
+        <div className="mx-auto max-w-7xl min-w-0">
           <div className="mb-6">
             <Link
               href="/"
-              className="inline-flex items-center gap-2 text-stone-300 hover:text-white transition-colors"
+              className="inline-flex min-h-10 items-center gap-2 text-stone-300 touch-manipulation transition-colors hover:text-white"
             >
               ← Back to Home
             </Link>
           </div>
-          <h1 className="text-4xl md:text-5xl font-bold">
+          <h1 className="text-3xl font-bold sm:text-4xl md:text-5xl">
             {collection.title}
           </h1>
         </div>
       </div>
 
-      <div className="max-w-7xl mx-auto px-5 py-8">
+      <div className="mx-auto max-w-7xl min-w-0 px-4 py-8 sm:px-5">
         <div className="mb-6">
           <p className="text-stone-600">
             <span className="font-bold text-stone-800">{products.length}</span>{" "}

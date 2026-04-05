@@ -1,323 +1,130 @@
 import React from "react";
 import Image from "next/image";
-import {
-  Facebook,
-  Instagram,
-  Twitter,
-  Mail,
-  Phone,
-  MapPin,
-  Leaf,
-} from "lucide-react";
+import Link from "next/link";
+import { Facebook, Instagram } from "lucide-react";
+
+const navLinkClass =
+  "inline-flex min-h-10 items-center text-stone-600 touch-manipulation transition-colors hover:text-stone-900 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-stone-400 focus-visible:ring-offset-2 rounded-sm py-2";
 
 export const Footer = () => {
   return (
-    <footer className="bg-gradient-to-b from-stone-50 to-white border-t border-stone-200 px-5 py-12 lg:px-8 xl:px-[8%] text-stone-900">
-      {/* Top Section */}
-      <div className="flex flex-col lg:flex-row justify-between gap-12">
-        {/* Logo + Description */}
-        <div className="flex flex-col gap-6 w-full lg:w-[35%]">
-          {/* Logo */}
-          <div className="flex items-center gap-3">
-            <Image src="/image.png" alt="Rosélle Studio" width={40} height={40} className="object-contain" unoptimized />
-            <div className="text-2xl md:text-3xl font-bold bg-gradient-to-r from-stone-700 to-stone-900 bg-clip-text text-transparent">
+    <footer className="w-full border-t border-stone-200 bg-stone-50/80 px-6 py-12 text-stone-800 sm:px-8 lg:px-10 lg:py-14 xl:px-[8%]">
+      <div className="w-full max-w-none">
+        {/* Brand */}
+        <div className="flex items-start gap-4">
+          <Image
+            src="/image.png"
+            alt="Rosélle Studio"
+            width={44}
+            height={44}
+            className="h-11 w-11 shrink-0 object-contain"
+            unoptimized
+          />
+          <div className="min-w-0 pt-0.5">
+            <p className="text-lg font-semibold text-stone-900 sm:text-xl">
               Rosélle Studio
-            </div>
-          </div>
-
-          <p className="text-stone-700 leading-relaxed">
-            Crafting beautiful floral arrangements that bring joy and celebrate
-            life&apos;s special moments. Fresh blooms delivered with love and care.
-          </p>
-
-          {/* Feature Tags */}
-          <div className="flex flex-wrap gap-2 mt-4">
-            <span className="px-3 py-1 bg-stone-100 text-stone-700 text-sm rounded-full border border-stone-200">
-              🌿 Fresh Daily
-            </span>
-            <span className="px-3 py-1 bg-stone-100 text-stone-700 text-sm rounded-full border border-stone-200">
-              🚚 Free Delivery
-            </span>
-            <span className="px-3 py-1 bg-stone-100 text-stone-700 text-sm rounded-full border border-stone-200">
-              🎨 Custom Designs
-            </span>
+            </p>
+            <p className="mt-1 w-full text-xs leading-relaxed text-stone-600 sm:text-sm">
+              Artificial flowers, bouquets, and decor. Lahore, Pakistan.
+            </p>
           </div>
         </div>
 
-        {/* Newsletter + Navigation + Socials */}
-        <div className="flex flex-col w-full lg:w-[60%]">
-          {/* Newsletter */}
-          <div className="mb-10">
-            <div className="flex items-center gap-2 mb-4">
-              <Mail size={20} className="text-amber-600" />
-              <h3 className="text-xl font-semibold text-stone-800">
-                Join Our Floral Family
-              </h3>
-            </div>
-            <p className="text-stone-600 mb-4">
-              Get weekly inspiration, exclusive offers, and floral tips
-              delivered to your inbox.
-            </p>
-            <form className="flex flex-col sm:flex-row gap-3 w-full">
-              <input
-                type="email"
-                placeholder="Your email address"
-                className="px-5 py-3 rounded-xl border border-stone-200 bg-white text-stone-900 placeholder-stone-400 focus:outline-none focus:ring-2 focus:ring-amber-300 focus:border-transparent w-full sm:flex-1"
-              />
-              <button
-                type="submit"
-                className="px-6 py-3 bg-gradient-to-r from-stone-700 to-stone-800 text-white rounded-xl hover:from-stone-800 hover:to-stone-900 transition-all duration-300 font-medium flex items-center justify-center gap-2"
+        {/* Nav: one compact row, wraps cleanly on narrow screens */}
+        <nav
+          className="mt-8 flex flex-wrap items-center gap-x-3 gap-y-2 border-b border-stone-200/80 pb-6 text-xs font-medium sm:gap-x-4 sm:text-sm"
+          aria-label="Footer"
+        >
+          {[
+            { href: "/", label: "Home" },
+            { href: "/allproducts", label: "Shop" },
+            { href: "/blogpage", label: "Blog" },
+            { href: "/contact", label: "Contact" },
+          ].map((item, i) => (
+            <React.Fragment key={item.href}>
+              {i > 0 && (
+                <span className="select-none text-stone-300" aria-hidden>
+                  ·
+                </span>
+              )}
+              <Link href={item.href} className={navLinkClass}>
+                {item.label}
+              </Link>
+            </React.Fragment>
+          ))}
+        </nav>
+
+        {/* Contact (stacked) + Facebook & Instagram — single divider is nav border-b above */}
+        <div className="mt-8">
+          <div className="flex flex-col items-center gap-8 sm:flex-row sm:items-center sm:justify-between sm:gap-10">
+            <div className="flex flex-col items-center gap-1 text-center text-sm text-stone-800 sm:items-start sm:text-left">
+              <a
+                href="tel:+923436951448"
+                className="min-h-10 font-medium touch-manipulation hover:text-stone-900 inline-flex items-center justify-center sm:justify-start"
               >
-                <span>Subscribe</span>
-                <Leaf size={16} />
-              </button>
-            </form>
-          </div>
-
-          {/* Divider */}
-          <div className="border-t border-stone-200 my-6"></div>
-
-          {/* Navigation + Contact + Socials */}
-          <div className="flex flex-col md:flex-row gap-12">
-            {/* Quick Links */}
-            <div className="w-full md:w-1/3">
-              <h4 className="text-lg font-semibold text-stone-800 mb-4 flex items-center gap-2">
-                <span>🌷</span> Quick Links
-              </h4>
-              <ul className="space-y-3">
-                <li>
-                  <a
-                    href="#top"
-                    className="text-stone-600 hover:text-stone-800 transition-colors flex items-center gap-2"
-                  >
-                    <span className="text-amber-500">→</span> Home
-                  </a>
-                </li>
-                <li>
-                  <a
-                    href="#products"
-                    className="text-stone-600 hover:text-stone-800 transition-colors flex items-center gap-2"
-                  >
-                    <span className="text-amber-500">→</span> Shop All
-                  </a>
-                </li>
-                <li>
-                  <a
-                    href="#about"
-                    className="text-stone-600 hover:text-stone-800 transition-colors flex items-center gap-2"
-                  >
-                    <span className="text-amber-500">→</span> Our Story
-                  </a>
-                </li>
-                <li>
-                  <a
-                    href="#contact"
-                    className="text-stone-600 hover:text-stone-800 transition-colors flex items-center gap-2"
-                  >
-                    <span className="text-amber-500">→</span> Contact
-                  </a>
-                </li>
-                <li>
-                  <a
-                    href="#"
-                    className="text-stone-600 hover:text-stone-800 transition-colors flex items-center gap-2"
-                  >
-                    <span className="text-amber-500">→</span> FAQs
-                  </a>
-                </li>
-              </ul>
+                +92 343 6951448
+              </a>
+              <span className="text-stone-300 select-none" aria-hidden>
+                ·
+              </span>
+              <a
+                href="mailto:rosellestudioofficial@gmail.com"
+                className="break-all font-medium touch-manipulation hover:text-stone-900"
+              >
+                rosellestudioofficial@gmail.com
+              </a>
+              <span className="text-stone-300 select-none" aria-hidden>
+                ·
+              </span>
+              <span className="font-medium">Lahore, Pakistan</span>
             </div>
 
-            {/* Categories */}
-            <div className="w-full md:w-1/3">
-              <h4 className="text-lg font-semibold text-stone-800 mb-4 flex items-center gap-2">
-                <span>💐</span> Collections
-              </h4>
-              <ul className="space-y-3">
-                <li>
-                  <a
-                    href="#"
-                    className="text-stone-600 hover:text-stone-800 transition-colors"
-                  >
-                    Wedding Flowers
-                  </a>
-                </li>
-                <li>
-                  <a
-                    href="#"
-                    className="text-stone-600 hover:text-stone-800 transition-colors"
-                  >
-                    Seasonal Blooms
-                  </a>
-                </li>
-                <li>
-                  <a
-                    href="#"
-                    className="text-stone-600 hover:text-stone-800 transition-colors"
-                  >
-                    Luxury Arrangements
-                  </a>
-                </li>
-                <li>
-                  <a
-                    href="#"
-                    className="text-stone-600 hover:text-stone-800 transition-colors"
-                  >
-                    Gift Bouquets
-                  </a>
-                </li>
-                <li>
-                  <a
-                    href="#"
-                    className="text-stone-600 hover:text-stone-800 transition-colors"
-                  >
-                    Subscription Boxes
-                  </a>
-                </li>
-              </ul>
-            </div>
-
-            {/* Contact Info + Socials */}
-            <div className="w-full md:w-1/3">
-              <h4 className="text-lg font-semibold text-stone-800 mb-4 flex items-center gap-2">
-                <span>📞</span> Contact Us
-              </h4>
-
-              <div className="space-y-4 mb-6">
-                <div className="flex items-start gap-3">
-                  <Phone size={18} className="text-amber-600 mt-0.5" />
-                  <div>
-                    <p className="text-sm text-stone-600">Call us at</p>
-                    <a href="tel:+923436951448" className="font-medium text-stone-800 hover:text-amber-600 transition-colors">
-                      +92 343 6951448
-                    </a>
-                  </div>
-                </div>
-
-                <div className="flex items-start gap-3">
-                  <Mail size={18} className="text-amber-600 mt-0.5" />
-                  <div>
-                    <p className="text-sm text-stone-600">Email us at</p>
-                    <a href="mailto:rosellestudioofficial@gmail.com" className="font-medium text-stone-800 hover:text-amber-600 transition-colors">
-                      rosellestudioofficial@gmail.com
-                    </a>
-                  </div>
-                </div>
-
-                <div className="flex items-start gap-3">
-                  <MapPin size={18} className="text-amber-600 mt-0.5" />
-                  <div>
-                    <p className="text-sm text-stone-600">Based in</p>
-                    <p className="font-medium text-stone-800">
-                      Lahore, Pakistan
-                    </p>
-                  </div>
-                </div>
-              </div>
-
-              {/* Social Media */}
-              <div>
-                <p className="text-sm text-stone-600 mb-3">Follow Our Blooms</p>
-                <div className="flex gap-4">
-                  <a
-                    href="https://instagram.com"
-                    target="_blank"
-                    rel="noopener noreferrer"
-                    aria-label="Instagram"
-                    className="p-2 bg-stone-100 text-stone-700 rounded-lg hover:bg-stone-200 transition-colors"
-                  >
-                    <Instagram size={20} />
-                  </a>
-                  <a
-                    href="https://facebook.com"
-                    target="_blank"
-                    rel="noopener noreferrer"
-                    aria-label="Facebook"
-                    className="p-2 bg-stone-100 text-stone-700 rounded-lg hover:bg-stone-200 transition-colors"
-                  >
-                    <Facebook size={20} />
-                  </a>
-                  <a
-                    href="https://twitter.com"
-                    target="_blank"
-                    rel="noopener noreferrer"
-                    aria-label="Twitter"
-                    className="p-2 bg-stone-100 text-stone-700 rounded-lg hover:bg-stone-200 transition-colors"
-                  >
-                    <Twitter size={20} />
-                  </a>
-                  <a
-                    href="https://pinterest.com"
-                    target="_blank"
-                    rel="noopener noreferrer"
-                    aria-label="Pinterest"
-                    className="p-2 bg-stone-100 text-stone-700 rounded-lg hover:bg-stone-200 transition-colors"
-                  >
-                    <span className="text-lg">📌</span>
-                  </a>
-                </div>
-              </div>
+            <div className="flex shrink-0 items-center justify-center gap-3 sm:justify-end">
+              <a
+                href="https://facebook.com"
+                target="_blank"
+                rel="noopener noreferrer"
+                aria-label="Facebook"
+                className="flex h-11 w-11 items-center justify-center rounded-full bg-[#1877F2] text-white shadow-md transition-transform hover:scale-105 hover:shadow-lg"
+              >
+                <Facebook size={20} strokeWidth={2} aria-hidden />
+              </a>
+              <a
+                href="https://www.instagram.com/rosellestudioofficial/"
+                target="_blank"
+                rel="noopener noreferrer"
+                aria-label="Instagram"
+                className="flex h-11 w-11 items-center justify-center rounded-full bg-gradient-to-tr from-[#f09433] via-[#dc2743] to-[#bc1888] text-white shadow-md transition-transform hover:scale-105 hover:shadow-lg"
+              >
+                <Instagram size={20} strokeWidth={2} aria-hidden />
+              </a>
             </div>
           </div>
         </div>
-      </div>
 
-      {/* Bottom Section */}
-      <div className="border-t border-stone-200 mt-12 pt-8">
-        <div className="flex flex-col sm:flex-row justify-between items-center gap-4">
-          <div className="flex items-center gap-2">
-            <Image src="/image.png" alt="Rosélle Studio" width={24} height={24} className="object-contain" unoptimized />
-            <p className="text-stone-700">
-              © 2025 Rosélle Studio. All rights reserved.
-            </p>
-          </div>
-
-          <div className="flex gap-6 text-sm">
+        {/* Bottom */}
+        <div className="mt-10 flex flex-col gap-4 border-t border-stone-200 pt-8 text-xs text-stone-500 sm:flex-row sm:items-center sm:justify-between sm:text-sm">
+          <p>© {new Date().getFullYear()} Rosélle Studio. All rights reserved.</p>
+          <div className="flex flex-wrap gap-x-5 gap-y-2">
             <a
               href="#"
-              className="text-stone-600 hover:text-stone-800 transition-colors"
+              className="inline-flex min-h-10 items-center touch-manipulation hover:text-stone-800"
             >
-              Privacy Policy
+              Privacy
             </a>
             <a
               href="#"
-              className="text-stone-600 hover:text-stone-800 transition-colors"
+              className="inline-flex min-h-10 items-center touch-manipulation hover:text-stone-800"
             >
-              Terms of Service
+              Terms
             </a>
             <a
               href="#"
-              className="text-stone-600 hover:text-stone-800 transition-colors"
+              className="inline-flex min-h-10 items-center touch-manipulation hover:text-stone-800"
             >
-              Shipping Policy
-            </a>
-            <a
-              href="#"
-              className="text-stone-600 hover:text-stone-800 transition-colors"
-            >
-              Return Policy
+              Shipping
             </a>
           </div>
-        </div>
-
-        {/* Payment Methods */}
-        <div className="mt-6 text-center">
-          <p className="text-sm text-stone-500 mb-3">We Accept</p>
-          <div className="flex justify-center gap-4">
-            <span className="text-lg">💳</span>
-            <span className="text-lg">🏦</span>
-            <span className="text-lg">📱</span>
-            <span className="text-lg">💎</span>
-          </div>
-        </div>
-
-        {/* Made with love */}
-        <div className="text-center mt-8">
-          <p className="text-sm text-stone-400 flex items-center justify-center gap-2">
-            <span className="text-lg">❤️</span>
-            Made with love and fresh blooms
-            <span className="text-lg">🌿</span>
-          </p>
         </div>
       </div>
     </footer>

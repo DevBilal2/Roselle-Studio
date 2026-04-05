@@ -43,31 +43,31 @@ export default function NavBar({ className, ulClassName }) {
         bg-stone-50/95 backdrop-blur-sm border-b border-stone-200/50 ${className}`}
     >
       {/* Top Row: Mobile Menu (left) + Logo (center) + Cart/Account (right) */}
-      <div className="w-full flex items-center justify-between">
+      <div className="w-full flex min-w-0 items-center justify-between gap-2">
         {/* Mobile Menu Button - Left */}
-        <div className="md:hidden">
+        <div className="shrink-0 md:hidden">
           <MobileMenu navLinks={navLinks} theme="light" />
         </div>
 
-        {/* Logo - suppressHydrationWarning: server may send cached HTML; client replaces with current logo */}
-        <div suppressHydrationWarning>
+        {/* Logo — truncate on narrow screens */}
+        <div className="flex min-w-0 flex-1 justify-center md:flex-none md:justify-start" suppressHydrationWarning>
           <Link
             href="/"
-            className="flex items-center gap-2 font-bold text-xl md:text-2xl text-green-800 tracking-tight lg:mr-8"
+            className="flex max-w-full min-w-0 items-center gap-2 font-bold text-green-800 tracking-tight md:text-xl lg:mr-8 lg:text-2xl"
           >
-          <Image
-            src="/image.png"
-            alt="Rosélle Studio"
-            width={40}
-            height={40}
-            className="object-contain"
-          />
-            <span>Rosélle Studio</span>
+            <Image
+              src="/image.png"
+              alt="Rosélle Studio"
+              width={40}
+              height={40}
+              className="h-9 w-9 shrink-0 object-contain sm:h-10 sm:w-10"
+            />
+            <span className="truncate">Rosélle Studio</span>
           </Link>
         </div>
 
         {/* Desktop Search Bar - In the middle */}
-        <div className="hidden lg:flex flex-1 max-w-xl mx-8">
+        <div className="mx-4 hidden min-w-0 max-w-xl flex-1 lg:flex xl:mx-8">
           <form action="/allproducts" method="GET" className="relative w-full">
             <input
               type="search"
@@ -89,12 +89,13 @@ export default function NavBar({ className, ulClassName }) {
         </div>
 
         {/* Right Icons */}
-        <div className="flex items-center gap-3">
+        <div className="flex shrink-0 items-center gap-2 sm:gap-3">
           <CartButton className="text-rose-600 hover:text-rose-800 hover:scale-105 transition-all" />
           <Link
             href={accountHref}
-            className="p-2 hover:bg-stone-200/40 rounded-full transition-colors hover:scale-105"
+            className="flex min-h-11 min-w-11 items-center justify-center rounded-full p-2 touch-manipulation transition-colors hover:bg-stone-200/40 hover:scale-105"
             title={accountTitle}
+            aria-label={accountTitle}
           >
             <User size={20} className="text-green-700" aria-hidden="true" />
           </Link>

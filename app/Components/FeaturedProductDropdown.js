@@ -13,10 +13,14 @@ function chunkIntoColumns(items, columns = COLUMN_COUNT) {
   return result;
 }
 
+const DROPDOWN_MAX_W = 800;
+const VIEW_MARGIN = 16;
+
 export default function FeaturedProductsDropdown() {
   const [isOpen, setIsOpen] = useState(false);
   const [isVisible, setIsVisible] = useState(false);
   const [dropdownPosition, setDropdownPosition] = useState({ left: 0, top: 0 });
+  const [panelWidth, setPanelWidth] = useState(DROPDOWN_MAX_W);
   const [collections, setCollections] = useState([]);
   const [loading, setLoading] = useState(true);
   const triggerRef = useRef(null);
@@ -44,18 +48,21 @@ export default function FeaturedProductsDropdown() {
       requestAnimationFrame(() => {
         if (triggerRef.current) {
           const rect = triggerRef.current.getBoundingClientRect();
-          const viewportWidth = window.innerWidth;
-          const dropdownWidth = 800;
-          // Fixed position = viewport-relative; do NOT add scrollY
+          const vw = window.innerWidth;
+          const dw = Math.min(
+            DROPDOWN_MAX_W,
+            Math.max(280, vw - VIEW_MARGIN * 2)
+          );
           const leftPosition = Math.max(
-            20,
+            VIEW_MARGIN,
             Math.min(
-              rect.left + rect.width / 2 - dropdownWidth / 2,
-              viewportWidth - dropdownWidth - 20
+              rect.left + rect.width / 2 - dw / 2,
+              vw - dw - VIEW_MARGIN
             )
           );
 
           requestAnimationFrame(() => {
+            setPanelWidth(dw);
             setDropdownPosition({
               left: leftPosition,
               top: rect.bottom + 4,
@@ -99,16 +106,20 @@ export default function FeaturedProductsDropdown() {
           requestAnimationFrame(() => {
             if (triggerRef.current) {
               const rect = triggerRef.current.getBoundingClientRect();
-              const viewportWidth = window.innerWidth;
-              const dropdownWidth = 800;
+              const vw = window.innerWidth;
+              const dw = Math.min(
+                DROPDOWN_MAX_W,
+                Math.max(280, vw - VIEW_MARGIN * 2)
+              );
               const leftPosition = Math.max(
-                20,
+                VIEW_MARGIN,
                 Math.min(
-                  rect.left + rect.width / 2 - dropdownWidth / 2,
-                  viewportWidth - dropdownWidth - 20
+                  rect.left + rect.width / 2 - dw / 2,
+                  vw - dw - VIEW_MARGIN
                 )
               );
               requestAnimationFrame(() => {
+                setPanelWidth(dw);
                 setDropdownPosition({
                   left: leftPosition,
                   top: rect.bottom + 4,
@@ -153,15 +164,70 @@ export default function FeaturedProductsDropdown() {
     setMounted(true);
   }, []);
 
-  // Prevent body scroll when dropdown is open so hover doesn't move the page
+  // Lock document scroll while open (html + body). No padding-right — avoids the
+  // “extra gutter” feel on hover; globals.css scrollbar-gutter: stable helps layout.
   useEffect(() => {
-    if (isOpen) {
-      const prev = document.body.style.overflow;
-      document.body.style.overflow = "hidden";
-      return () => {
-        document.body.style.overflow = prev;
-      };
-    }
+    if (!isOpen) return;
+
+    const html = document.documentElement;
+    const body = document.body;
+
+    const prev = {
+      htmlOverflow: html.style.overflow,
+      bodyOverflow: body.style.overflow,
+      htmlOS: html.style.overscrollBehavior,
+      bodyOS: body.style.overscrollBehavior,
+    };
+
+    html.style.overflow = "hidden";
+    body.style.overflow = "hidden";
+    html.style.overscrollBehavior = "none";
+    body.style.overscrollBehavior = "none";
+
+    const isInsidePanel = (target) =>
+      typeof target?.closest === "function" &&
+      target.closest("[data-shop-dropdown-panel]");
+
+    const isEditableTarget = (target) =>
+      typeof target?.closest === "function" &&
+      target.closest("input, textarea, select, [contenteditable=true]");
+
+    const preventWheelTouch = (e) => {
+      if (isInsidePanel(e.target)) return;
+      e.preventDefault();
+    };
+
+    const preventScrollKeys = (e) => {
+      if (isInsidePanel(e.target) || isEditableTarget(e.target)) return;
+      const k = e.key;
+      if (
+        k === " " ||
+        k === "PageUp" ||
+        k === "PageDown" ||
+        k === "ArrowUp" ||
+        k === "ArrowDown" ||
+        k === "Home" ||
+        k === "End"
+      ) {
+        e.preventDefault();
+      }
+    };
+
+    document.addEventListener("wheel", preventWheelTouch, { passive: false });
+    document.addEventListener("touchmove", preventWheelTouch, {
+      passive: false,
+    });
+    window.addEventListener("keydown", preventScrollKeys);
+
+    return () => {
+      html.style.overflow = prev.htmlOverflow;
+      body.style.overflow = prev.bodyOverflow;
+      html.style.overscrollBehavior = prev.htmlOS;
+      body.style.overscrollBehavior = prev.bodyOS;
+      document.removeEventListener("wheel", preventWheelTouch);
+      document.removeEventListener("touchmove", preventWheelTouch);
+      window.removeEventListener("keydown", preventScrollKeys);
+    };
   }, [isOpen]);
 
   return (
@@ -192,7 +258,8 @@ className="no-underline whitespace-nowrap text-green-800 hover:text-green-700 tr
       {isOpen && mounted && createPortal(
         <div
           ref={dropdownRef}
-          className={`fixed top-0 bg-white border border-stone-200 rounded-2xl shadow-2xl w-[800px] max-h-[calc(100vh-8rem)] z-[9999] overflow-y-auto overflow-x-hidden transition-all duration-200 ${
+          data-shop-dropdown-panel
+          className={`fixed top-0 max-h-[min(85vh,calc(100dvh-6rem))] z-[9999] overflow-y-auto overflow-x-hidden rounded-2xl border border-stone-200 bg-white shadow-2xl transition-all duration-200 ${
             isVisible
               ? "opacity-100 translate-y-0"
               : "opacity-0 -translate-y-2 pointer-events-none"
@@ -200,12 +267,13 @@ className="no-underline whitespace-nowrap text-green-800 hover:text-green-700 tr
           style={{
             left: `${dropdownPosition.left}px`,
             top: `${dropdownPosition.top}px`,
+            width: `${panelWidth}px`,
             transformOrigin: "top center",
           }}
           onMouseEnter={handleDropdownMouseEnter}
           onMouseLeave={handleDropdownMouseLeave}
         >
-          <div className="p-8">
+          <div className="p-4 sm:p-6 lg:p-8">
             {loading ? (
               <div className="py-8 text-center text-stone-500 text-sm">
                 Loading collections…
@@ -215,14 +283,14 @@ className="no-underline whitespace-nowrap text-green-800 hover:text-green-700 tr
                 No collections yet.
               </div>
             ) : (
-              <div className="grid grid-cols-4 gap-6">
+              <div className="grid grid-cols-2 gap-4 md:grid-cols-3 lg:grid-cols-4 lg:gap-6">
                 {collectionColumns.map((column, colIndex) => (
-                  <div key={colIndex} className="space-y-2">
+                  <div key={colIndex} className="min-w-0 space-y-1">
                     {column.map((item, itemIndex) => (
                       <Link
                         key={itemIndex}
                         href={item.href}
-                        className="block text-sm text-green-800 hover:text-green-700 hover:bg-green-50/80 p-2 rounded transition-colors"
+                        className="block rounded px-2 py-2.5 text-sm text-green-800 transition-colors hover:bg-green-50/80 hover:text-green-700 touch-manipulation"
                         onClick={() => {
                           setIsVisible(false);
                           setTimeout(() => setIsOpen(false), 200);

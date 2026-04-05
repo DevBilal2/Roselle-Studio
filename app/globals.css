@@ -1,5 +1,15 @@
 @import "tailwindcss";
 
+/* Reserve space for the vertical scrollbar; clip horizontal overflow to avoid page shift */
+html {
+  scrollbar-gutter: stable;
+  overflow-x: clip;
+}
+
+body {
+  overflow-x: clip;
+}
+
 /* Critical styles - keep minimal for faster initial load */
 .scrollbar-hide {
   -ms-overflow-style: none;

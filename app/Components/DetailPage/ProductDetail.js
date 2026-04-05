@@ -75,21 +75,90 @@ export default function ProductDetail({ product }) {
         </a>
       </div>
 
-      <div className=" mx-auto px-5 lg:px-8 xl:px-[8%] py-4">
-        <div className="grid grid-cols-1 lg:grid-cols-2 gap-8 lg:gap-12">
-          {/* Product Images Section */}
-          <div>
-            {/* Main Image */}
-            <div className="relative w-full aspect-square rounded-3xl overflow-hidden bg-gradient-to-br from-stone-50 to-amber-50 border border-stone-200 mb-6">
+      <div className="mx-auto px-0 py-4 lg:px-8 lg:py-4 xl:px-[8%]">
+        <div className="grid grid-cols-1 gap-8 lg:grid-cols-2 lg:gap-12">
+          {/* Mobile: full-width stack — no side gaps, images flush */}
+          <div className="flex flex-col gap-0 lg:hidden">
+            {(images.filter(Boolean).length > 0
+              ? images.filter(Boolean)
+              : [null]
+            ).map((img, index) => (
+              <div
+                key={index}
+                className="relative aspect-square w-full overflow-hidden bg-stone-100"
+              >
+                {img ? (
+                  <Image
+                    src={img}
+                    alt={`${product.Heading} - ${index + 1}`}
+                    fill
+                    className="object-cover object-center"
+                    sizes="100vw"
+                    priority={index === 0}
+                    quality={75}
+                  />
+                ) : (
+                  <div className="flex h-full items-center justify-center">
+                    <span className="text-8xl text-stone-300">🌸</span>
+                  </div>
+                )}
+                {index === 0 && (
+                  <>
+                    <div className="absolute left-3 top-3 flex flex-col gap-2">
+                      {product.isNew && (
+                        <span className="rounded-full border border-emerald-700 bg-emerald-600 px-3 py-1 text-xs font-medium text-white">
+                          New Arrival
+                        </span>
+                      )}
+                      {product.bestSeller && (
+                        <span className="rounded-full border border-amber-700 bg-amber-600 px-3 py-1 text-xs font-medium text-white">
+                          Best Seller
+                        </span>
+                      )}
+                      {product.discount && (
+                        <span className="rounded-full border border-stone-900 bg-stone-800 px-3 py-1 text-xs font-medium text-white">
+                          {product.discount}% OFF
+                        </span>
+                      )}
+                    </div>
+                    <button
+                      type="button"
+                      onClick={handleWishlist}
+                      aria-label={
+                        addedToWishlist
+                          ? `Remove ${product.Heading} from wishlist`
+                          : `Add ${product.Heading} to wishlist`
+                      }
+                      className="absolute right-3 top-3 rounded-full border border-stone-200 bg-white/90 p-3 shadow-sm backdrop-blur-sm transition-all hover:scale-110 hover:shadow-md"
+                    >
+                      <Heart
+                        size={22}
+                        aria-hidden="true"
+                        className={
+                          addedToWishlist
+                            ? "fill-stone-700 text-stone-700"
+                            : "text-stone-600"
+                        }
+                      />
+                    </button>
+                  </>
+                )}
+              </div>
+            ))}
+          </div>
+
+          {/* Desktop: main + thumbnails */}
+          <div className="hidden lg:block">
+            <div className="relative mb-3 aspect-square w-full overflow-hidden bg-stone-100">
               {images[selectedImage] ? (
                 <Image
                   src={images[selectedImage]}
                   alt={`${product.Heading} - Image ${selectedImage + 1}`}
                   fill
-                  className="object-contain object-center"
-                  sizes="(max-width: 768px) 100vw, 50vw"
+                  className="object-cover object-center"
+                  sizes="(max-width: 1280px) 50vw, 40vw"
                   priority
-                  quality={70}
+                  quality={75}
                 />
               ) : (
                 <div className="absolute inset-0 flex items-center justify-center">
@@ -97,30 +166,33 @@ export default function ProductDetail({ product }) {
                 </div>
               )}
 
-              {/* Product Badges */}
-              <div className="absolute top-4 left-4 flex flex-col gap-2">
+              <div className="absolute left-4 top-4 flex flex-col gap-2">
                 {product.isNew && (
-                  <span className="px-3 py-1 bg-emerald-600 text-white text-xs font-medium rounded-full border border-emerald-700">
+                  <span className="rounded-full border border-emerald-700 bg-emerald-600 px-3 py-1 text-xs font-medium text-white">
                     New Arrival
                   </span>
                 )}
                 {product.bestSeller && (
-                  <span className="px-3 py-1 bg-amber-600 text-white text-xs font-medium rounded-full border border-amber-700">
+                  <span className="rounded-full border border-amber-700 bg-amber-600 px-3 py-1 text-xs font-medium text-white">
                     Best Seller
                   </span>
                 )}
                 {product.discount && (
-                  <span className="px-3 py-1 bg-stone-800 text-white text-xs font-medium rounded-full border border-stone-900">
+                  <span className="rounded-full border border-stone-900 bg-stone-800 px-3 py-1 text-xs font-medium text-white">
                     {product.discount}% OFF
                   </span>
                 )}
               </div>
 
-              {/* Wishlist Button */}
               <button
+                type="button"
                 onClick={handleWishlist}
-                aria-label={addedToWishlist ? `Remove ${product.Heading} from wishlist` : `Add ${product.Heading} to wishlist`}
-                className="absolute top-4 right-4 p-3 bg-white/90 backdrop-blur-sm rounded-full shadow-sm hover:shadow-md transition-all hover:scale-110 border border-stone-200"
+                aria-label={
+                  addedToWishlist
+                    ? `Remove ${product.Heading} from wishlist`
+                    : `Add ${product.Heading} to wishlist`
+                }
+                className="absolute right-4 top-4 rounded-full border border-stone-200 bg-white/90 p-3 shadow-sm backdrop-blur-sm transition-all hover:scale-110 hover:shadow-md"
               >
                 <Heart
                   size={22}
@@ -134,19 +206,19 @@ export default function ProductDetail({ product }) {
               </button>
             </div>
 
-            {/* Thumbnail Images */}
             {images.length > 1 && (
-              <div className="flex gap-4 overflow-x-auto pb-2">
+              <div className="flex gap-0.5 overflow-x-auto pb-1 [-ms-overflow-style:none] [scrollbar-width:none] [&::-webkit-scrollbar]:hidden">
                 {images.map((img, index) => (
                   <button
                     key={index}
+                    type="button"
                     onClick={() => setSelectedImage(index)}
                     aria-label={`View product image ${index + 1}`}
                     aria-pressed={selectedImage === index}
-                    className={`flex-shrink-0 relative w-16 h-16 md:w-20 md:h-20 rounded-xl overflow-hidden border-2 transition-all ${
+                    className={`relative h-16 w-16 shrink-0 overflow-hidden transition-all md:h-20 md:w-20 ${
                       selectedImage === index
-                        ? "border-stone-700 ring-2 ring-stone-200"
-                        : "border-stone-200 hover:border-stone-300"
+                        ? "ring-2 ring-stone-800 ring-offset-1"
+                        : "opacity-80 hover:opacity-100"
                     }`}
                   >
                     {img ? (
@@ -154,14 +226,14 @@ export default function ProductDetail({ product }) {
                         src={img}
                         alt={`Thumbnail ${index + 1}`}
                         fill
-                        className="object-contain object-center"
+                        className="object-cover object-center"
                         sizes="80px"
                         loading="lazy"
                         quality={70}
                       />
                     ) : (
-                      <div className="w-full h-full flex items-center justify-center bg-gradient-to-br from-stone-50 to-amber-50">
-                        <div className="text-xl text-stone-300">🌸</div>
+                      <div className="flex h-full w-full items-center justify-center bg-stone-100">
+                        <span className="text-xl text-stone-300">🌸</span>
                       </div>
                     )}
                   </button>
@@ -171,7 +243,7 @@ export default function ProductDetail({ product }) {
           </div>
 
           {/* Product Info Section */}
-          <div>
+          <div className="px-5 lg:px-0">
             {/* Brand & Category */}
             <div className="mb-4">
               <span className="text-sm font-medium text-stone-600 uppercase tracking-wider">
@@ -346,7 +418,7 @@ export default function ProductDetail({ product }) {
         </div>
 
         {/* Tabs Section - Description & Reviews */}
-        <div className="mt-12 mb-16">
+        <div className="mb-16 mt-12 px-5 lg:px-0">
           {/* Tabs Navigation */}
           <div className="flex border-b border-stone-200 mb-8">
             <button

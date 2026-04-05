@@ -23,12 +23,12 @@ export default function MobileMenu({ navLinks }) {
     <>
       {/* MENU BUTTON */}
       <button
-        className="p-2 text-green-800"
+        type="button"
+        className="flex min-h-11 min-w-11 items-center justify-center rounded-lg p-2 text-lg text-green-800 touch-manipulation active:bg-stone-200/50"
         aria-label={open ? "Close menu" : "Open menu"}
         aria-expanded={open}
         aria-controls="mobile-menu"
         onClick={() => setOpen(!open)}
-        type="button"
       >
         {open ? "✕" : "☰"}
       </button>
@@ -38,8 +38,11 @@ export default function MobileMenu({ navLinks }) {
         <ul
           id="mobile-menu"
           className="
-            fixed top-16 left-4
-            w-80 p-4
+            fixed left-3 top-16 z-[9999]
+            w-[min(20rem,calc(100vw-1.5rem))]
+            max-h-[min(70vh,calc(100dvh-5rem))]
+            overflow-y-auto
+            p-4
             rounded-2xl
             shadow-2xl
             border border-stone-200
@@ -48,7 +51,6 @@ export default function MobileMenu({ navLinks }) {
             via-white
             to-stone-100
             backdrop-blur-xl
-            z-[9999]
             animate-in fade-in zoom-in-95
           "
         >

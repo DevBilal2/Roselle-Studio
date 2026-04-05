@@ -65,7 +65,7 @@ export default function Testimonials() {
           </p>
         </div>
 
-        <div className="relative px-12 md:px-16">
+        <div className="relative px-14 sm:px-16 md:px-20">
           {testimonials.length > 0 ? (
             <TestimonialsSlider testimonials={testimonials} />
           ) : (
