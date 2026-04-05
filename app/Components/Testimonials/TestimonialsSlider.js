@@ -52,7 +52,7 @@ export default function TestimonialsSlider({ testimonials }) {
           dynamicBullets: true,
           el: ".custom-pagination",
         }}
-        loop={testimonials.length > 3}
+        loop={true}
         onSwiper={(swiper) => {
           swiperRef.current = swiper;
         }}
@@ -64,28 +64,30 @@ export default function TestimonialsSlider({ testimonials }) {
         ))}
       </Swiper>
 
-      {/* Custom Navigation Buttons */}
+      {/* Custom Navigation — centered on swiper edge so most of the control sits in section padding, not on cards */}
       <div
         ref={prevRef}
-        className="testimonial-prev absolute left-0 top-1/2 -translate-y-1/2 -translate-x-4 lg:-translate-x-6 z-10"
+        className="testimonial-prev absolute left-0 top-1/2 z-10 -translate-x-1/2 -translate-y-1/2 md:-translate-x-[55%] lg:-translate-x-[60%]"
       >
         <button
-          className="w-12 h-12 rounded-full bg-white/90 backdrop-blur-sm border border-stone-300 text-stone-700 shadow-lg hover:bg-white hover:shadow-xl transition-all duration-300 flex items-center justify-center"
+          type="button"
+          className="flex h-12 w-12 items-center justify-center rounded-full border border-stone-300 bg-white/90 text-stone-700 shadow-lg backdrop-blur-sm transition-all duration-300 hover:bg-white hover:shadow-xl"
           aria-label="Previous testimonial"
         >
-          <ChevronLeft size={24} />
+          <ChevronLeft size={24} aria-hidden />
         </button>
       </div>
 
       <div
         ref={nextRef}
-        className="testimonial-next absolute right-0 top-1/2 -translate-y-1/2 translate-x-4 lg:translate-x-6 z-10"
+        className="testimonial-next absolute right-0 top-1/2 z-10 translate-x-1/2 -translate-y-1/2 md:translate-x-[55%] lg:translate-x-[60%]"
       >
         <button
-          className="w-12 h-12 rounded-full bg-white/90 backdrop-blur-sm border border-stone-300 text-stone-700 shadow-lg hover:bg-white hover:shadow-xl transition-all duration-300 flex items-center justify-center"
+          type="button"
+          className="flex h-12 w-12 items-center justify-center rounded-full border border-stone-300 bg-white/90 text-stone-700 shadow-lg backdrop-blur-sm transition-all duration-300 hover:bg-white hover:shadow-xl"
           aria-label="Next testimonial"
         >
-          <ChevronRight size={24} />
+          <ChevronRight size={24} aria-hidden />
         </button>
       </div>
 

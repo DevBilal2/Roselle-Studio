@@ -84,6 +84,8 @@ export default function CheckoutPage() {
 
     const newErrors = {};
     if (!formData.firstName) newErrors.firstName = "First name is required";
+    if (!formData.email?.trim()) newErrors.email = "Email is required";
+    else if (!/\S+@\S+\.\S+/.test(formData.email.trim())) newErrors.email = "Please enter a valid email";
     if (!formData.phone) newErrors.phone = "Phone number is required";
     if (!formData.address) newErrors.address = "Address is required";
     if (!formData.city) newErrors.city = "City is required";
@@ -102,7 +104,7 @@ export default function CheckoutPage() {
         contact: {
           firstName: formData.firstName,
           lastName: formData.lastName,
-          email: formData.email || `order-${Date.now()}@flowersheavenly.com`,
+          email: formData.email.trim(),
           phone: `+${formData.countryCode}${formData.phone.replace(/\D/g, "")}`,
         },
         shipping: {
@@ -114,6 +116,7 @@ export default function CheckoutPage() {
         },
         items: cartItems.map((item) => ({
           id: item.id,
+          variantId: item.variantId || null,
           name: item.name,
           price: item.price,
           quantity: item.quantity,
@@ -438,7 +441,7 @@ export default function CheckoutPage() {
 
                 <div>
                   <label className="block text-sm font-medium text-stone-800 mb-2">
-                    Email (Optional)
+                    Email *
                   </label>
                   <div className="relative">
                     <Mail
@@ -450,10 +453,16 @@ export default function CheckoutPage() {
                       name="email"
                       value={formData.email}
                       onChange={handleChange}
-                      className="w-full pl-10 pr-4 py-3 border border-stone-200 rounded-xl focus:ring-2 focus:ring-stone-300 focus:border-transparent"
+                      required
+                      className={`w-full pl-10 pr-4 py-3 border rounded-xl focus:ring-2 focus:ring-stone-300 focus:border-transparent ${
+                        errors.email ? "border-red-300" : "border-stone-200"
+                      }`}
                       placeholder="your@email.com"
                     />
                   </div>
+                  {errors.email && (
+                    <p className="mt-1 text-sm text-red-500">{errors.email}</p>
+                  )}
                 </div>
 
                 <div>

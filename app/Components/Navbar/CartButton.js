@@ -8,8 +8,10 @@ const CartButton = () => {
 
   return (
     <button
+      type="button"
       onClick={toggleCart}
-      className="relative p-2 hover:bg-rose-50 rounded-full transition-colors"
+      aria-label="Open shopping cart"
+      className="relative flex min-h-11 min-w-11 items-center justify-center rounded-full p-2 touch-manipulation transition-colors hover:bg-rose-50"
     >
       <ShoppingCart className="text-black" size={20} />
       {getCartCount() > 0 && (

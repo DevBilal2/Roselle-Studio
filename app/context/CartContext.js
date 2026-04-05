@@ -1,23 +1,26 @@
 "use client";
-import React, { createContext, useContext, useState, useEffect, useMemo, useCallback } from "react";
+import React, { createContext, useContext, useState, useEffect, useMemo, useCallback, useRef } from "react";
 
 const CartContext = createContext();
 
 export function CartProvider({ children }) {
   const [cartItems, setCartItems] = useState([]);
   const [isCartOpen, setIsCartOpen] = useState(false);
+  const hasLoadedFromStorage = useRef(false);
 
   // Load cart from localStorage on mount - defer to avoid blocking
   useEffect(() => {
-    // Use requestIdleCallback to defer non-critical work
     const loadCart = () => {
       try {
         const savedCart = localStorage.getItem("flowerShopCart");
         if (savedCart) {
-          setCartItems(JSON.parse(savedCart));
+          const parsed = JSON.parse(savedCart);
+          setCartItems(Array.isArray(parsed) ? parsed : []);
         }
+        hasLoadedFromStorage.current = true;
       } catch (error) {
         console.error("Error loading cart:", error);
+        hasLoadedFromStorage.current = true;
       }
     };
 
@@ -25,17 +28,21 @@ export function CartProvider({ children }) {
       if ("requestIdleCallback" in window) {
         requestIdleCallback(loadCart, { timeout: 2000 });
       } else {
-        // Fallback for browsers without requestIdleCallback
         setTimeout(loadCart, 0);
       }
     }
   }, []);
 
-  // Save cart to localStorage on change - debounce aggressively for mobile
+  // Save cart to localStorage on change - skip until we've loaded so we don't overwrite with []
   useEffect(() => {
-    if (cartItems.length === 0) return; // Don't save empty cart on mount
+    if (!hasLoadedFromStorage.current) return;
+    if (cartItems.length === 0) {
+      try {
+        localStorage.removeItem("flowerShopCart");
+      } catch (e) {}
+      return;
+    }
 
-    // Use requestIdleCallback for mobile performance - don't block main thread
     const saveCart = () => {
       try {
         localStorage.setItem("flowerShopCart", JSON.stringify(cartItems));
@@ -93,6 +100,7 @@ export function CartProvider({ children }) {
           {
             // Store the ORIGINAL GraphQL ID
             id: product.id, // Keep original: "gid://shopify/Product/8696221532298"
+            variantId: product.variantId || product.productData?.variantId || null,
             name: product.Heading || product.title || product.name,
             price:
               typeof product.price === "string"

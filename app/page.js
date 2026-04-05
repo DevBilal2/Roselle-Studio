@@ -46,17 +46,6 @@ const Services = dynamic(() => import("./Components/ServiceSection/Services"), {
   loading: () => <ServicesSkeleton />,
 });
 
-// Defer below-fold sections for mobile
-const AboutSection = dynamic(() => import("./Components/About/About"), {
-  loading: () => (
-    <div className="py-20 bg-white">
-      <div className="container mx-auto px-4">
-        <div className="h-12 bg-stone-200 rounded-lg w-64 mx-auto mb-12 animate-pulse"></div>
-      </div>
-    </div>
-  ),
-});
-
 const CompactBlogSection = dynamic(
   () => import("./Components/compactblogsection"),
   {
@@ -85,6 +74,18 @@ const Testimonials = dynamic(() => import("./Components/Testimonials"), {
   ),
 });
 
+export const metadata = {
+  title: "Artificial Flowers Lahore | Bouquets, Bunches, Decor & Wholesale Pakistan",
+  description:
+    "Roselle Studio Lahore – best artificial flowers, bouquets, bunches, decoration pieces & balloons in Pakistan. Shop online or order wholesale. Delivery across Lahore & Pakistan.",
+  openGraph: {
+    title: "Artificial Flowers Lahore | Bouquets, Decor & Wholesale | Roselle Studio",
+    description:
+      "Shop artificial flower bouquets, bunches, home decor & balloons. Wholesale artificial flowers in Lahore & Pakistan.",
+    url: "/",
+  },
+};
+
 export default function Home() {
   return (
     <>
@@ -97,7 +98,6 @@ export default function Home() {
           <CompaniesSection />
         </Suspense>
         <Services />
-        <AboutSection />
         <CompactBlogSection />
         {/* <Contact /> */}
         <Testimonials />

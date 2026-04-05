@@ -31,7 +31,7 @@ export const blogPosts = [
     readTime: "5 min read",
     category: "Tutorials",
     tags: ["floral design", "beginners", "arrangement"],
-    image: "https://images.unsplash.com/photo-1566438480900-0609be27a4be?w=600",
+    image: "https://images.unsplash.com/photo-1518895312237-a9e23508077d?w=600",
     featured: true,
   },
   {
@@ -65,7 +65,7 @@ export const blogPosts = [
     readTime: "4 min read",
     category: "Seasonal",
     tags: ["spring", "seasonal", "home decor"],
-    image: "https://images.unsplash.com/photo-1613395877344-13d4a8e0d49e?w-600",
+    image: "https://images.unsplash.com/photo-1518895312237-a9e23508077d?w=600",
     featured: true,
   },
   {
@@ -105,7 +105,7 @@ export const blogPosts = [
     readTime: "6 min read",
     category: "Care Tips",
     tags: ["flower care", "tips", "longevity"],
-    image: "https://images.unsplash.com/photo-1567306301408-9b74779a11af?w=600",
+    image: "https://images.unsplash.com/photo-1518895312237-a9e23508077d?w=600",
     featured: false,
   },
   {
@@ -138,7 +138,7 @@ export const blogPosts = [
     readTime: "7 min read",
     category: "Sustainability",
     tags: ["sustainability", "eco-friendly", "industry"],
-    image: "https://images.unsplash.com/photo-1585320806297-9794b3e4eeae?w=600",
+    image: "https://images.unsplash.com/photo-1518895312237-a9e23508077d?w=600",
     featured: false,
   },
   {
@@ -172,7 +172,7 @@ export const blogPosts = [
     readTime: "8 min read",
     category: "History",
     tags: ["symbolism", "history", "meaning"],
-    image: "https://images.unsplash.com/photo-1519378058457-4c29a0a2efac?w=600",
+    image: "https://images.unsplash.com/photo-1518895312237-a9e23508077d?w=600",
     featured: false,
   },
   {
@@ -206,7 +206,7 @@ export const blogPosts = [
     readTime: "5 min read",
     category: "Weddings",
     tags: ["weddings", "trends", "2024"],
-    image: "https://images.unsplash.com/photo-1519225421980-715cb0215aed?w=600",
+    image: "https://images.unsplash.com/photo-1518895312237-a9e23508077d?w=600",
     featured: true,
   },
 ];

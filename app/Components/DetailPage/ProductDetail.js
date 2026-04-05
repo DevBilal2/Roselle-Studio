@@ -31,49 +31,10 @@ export default function ProductDetail({ product }) {
   );
   const [addedToWishlist, setAddedToWishlist] = useState(false);
   const [activeTab, setActiveTab] = useState("description");
-  const [expandedReviews, setExpandedReviews] = useState(false);
   const { addToCart } = useCart();
   const images = product.images || [product.image];
 
-  // Sample reviews data
-  const reviews = [
-    {
-      id: 1,
-      name: "Sarah Johnson",
-      rating: 5,
-      date: "2 days ago",
-      comment:
-        "Absolutely stunning arrangement! The flowers arrived fresh and lasted over two weeks. The fragrance was heavenly!",
-      verified: true,
-    },
-    {
-      id: 2,
-      name: "Michael Chen",
-      rating: 4,
-      date: "1 week ago",
-      comment:
-        "Beautiful bouquet, perfect for my anniversary. My wife loved it!",
-      verified: true,
-    },
-    {
-      id: 3,
-      name: "Emma Rodriguez",
-      rating: 5,
-      date: "3 weeks ago",
-      comment:
-        "Best flowers I've ever received! The quality is exceptional and delivery was right on time.",
-      verified: false,
-    },
-    {
-      id: 4,
-      name: "David Wilson",
-      rating: 4,
-      date: "1 month ago",
-      comment:
-        "Great value for money. The flowers were fresh and the arrangement was exactly as shown.",
-      verified: true,
-    },
-  ];
+  const reviews = [];
 
   const handleAddToCart = () => {
     addToCart(product, quantity);
@@ -114,20 +75,90 @@ export default function ProductDetail({ product }) {
         </a>
       </div>
 
-      <div className=" mx-auto px-5 lg:px-8 xl:px-[8%] py-4">
-        <div className="grid grid-cols-1 lg:grid-cols-2 gap-8 lg:gap-12">
-          {/* Product Images Section */}
-          <div>
-            {/* Main Image */}
-            <div className="relative h-96 md:h-[500px] rounded-3xl overflow-hidden bg-gradient-to-br from-stone-50 to-amber-50 border border-stone-200 mb-6">
+      <div className="mx-auto px-0 py-4 lg:px-8 lg:py-4 xl:px-[8%]">
+        <div className="grid grid-cols-1 gap-8 lg:grid-cols-2 lg:gap-12">
+          {/* Mobile: full-width stack — no side gaps, images flush */}
+          <div className="flex flex-col gap-0 lg:hidden">
+            {(images.filter(Boolean).length > 0
+              ? images.filter(Boolean)
+              : [null]
+            ).map((img, index) => (
+              <div
+                key={index}
+                className="relative aspect-square w-full overflow-hidden bg-stone-100"
+              >
+                {img ? (
+                  <Image
+                    src={img}
+                    alt={`${product.Heading} - ${index + 1}`}
+                    fill
+                    className="object-cover object-center"
+                    sizes="100vw"
+                    priority={index === 0}
+                    quality={75}
+                  />
+                ) : (
+                  <div className="flex h-full items-center justify-center">
+                    <span className="text-8xl text-stone-300">🌸</span>
+                  </div>
+                )}
+                {index === 0 && (
+                  <>
+                    <div className="absolute left-3 top-3 flex flex-col gap-2">
+                      {product.isNew && (
+                        <span className="rounded-full border border-emerald-700 bg-emerald-600 px-3 py-1 text-xs font-medium text-white">
+                          New Arrival
+                        </span>
+                      )}
+                      {product.bestSeller && (
+                        <span className="rounded-full border border-amber-700 bg-amber-600 px-3 py-1 text-xs font-medium text-white">
+                          Best Seller
+                        </span>
+                      )}
+                      {product.discount && (
+                        <span className="rounded-full border border-stone-900 bg-stone-800 px-3 py-1 text-xs font-medium text-white">
+                          {product.discount}% OFF
+                        </span>
+                      )}
+                    </div>
+                    <button
+                      type="button"
+                      onClick={handleWishlist}
+                      aria-label={
+                        addedToWishlist
+                          ? `Remove ${product.Heading} from wishlist`
+                          : `Add ${product.Heading} to wishlist`
+                      }
+                      className="absolute right-3 top-3 rounded-full border border-stone-200 bg-white/90 p-3 shadow-sm backdrop-blur-sm transition-all hover:scale-110 hover:shadow-md"
+                    >
+                      <Heart
+                        size={22}
+                        aria-hidden="true"
+                        className={
+                          addedToWishlist
+                            ? "fill-stone-700 text-stone-700"
+                            : "text-stone-600"
+                        }
+                      />
+                    </button>
+                  </>
+                )}
+              </div>
+            ))}
+          </div>
+
+          {/* Desktop: main + thumbnails */}
+          <div className="hidden lg:block">
+            <div className="relative mb-3 aspect-square w-full overflow-hidden bg-stone-100">
               {images[selectedImage] ? (
                 <Image
                   src={images[selectedImage]}
                   alt={`${product.Heading} - Image ${selectedImage + 1}`}
                   fill
-                  className="object-cover hover:scale-105 transition-transform duration-700"
-                  sizes="(max-width: 768px) 100vw, 50vw"
+                  className="object-cover object-center"
+                  sizes="(max-width: 1280px) 50vw, 40vw"
                   priority
+                  quality={75}
                 />
               ) : (
                 <div className="absolute inset-0 flex items-center justify-center">
@@ -135,30 +166,33 @@ export default function ProductDetail({ product }) {
                 </div>
               )}
 
-              {/* Product Badges */}
-              <div className="absolute top-4 left-4 flex flex-col gap-2">
+              <div className="absolute left-4 top-4 flex flex-col gap-2">
                 {product.isNew && (
-                  <span className="px-3 py-1 bg-emerald-600 text-white text-xs font-medium rounded-full border border-emerald-700">
+                  <span className="rounded-full border border-emerald-700 bg-emerald-600 px-3 py-1 text-xs font-medium text-white">
                     New Arrival
                   </span>
                 )}
                 {product.bestSeller && (
-                  <span className="px-3 py-1 bg-amber-600 text-white text-xs font-medium rounded-full border border-amber-700">
+                  <span className="rounded-full border border-amber-700 bg-amber-600 px-3 py-1 text-xs font-medium text-white">
                     Best Seller
                   </span>
                 )}
                 {product.discount && (
-                  <span className="px-3 py-1 bg-stone-800 text-white text-xs font-medium rounded-full border border-stone-900">
+                  <span className="rounded-full border border-stone-900 bg-stone-800 px-3 py-1 text-xs font-medium text-white">
                     {product.discount}% OFF
                   </span>
                 )}
               </div>
 
-              {/* Wishlist Button */}
               <button
+                type="button"
                 onClick={handleWishlist}
-                aria-label={addedToWishlist ? `Remove ${product.Heading} from wishlist` : `Add ${product.Heading} to wishlist`}
-                className="absolute top-4 right-4 p-3 bg-white/90 backdrop-blur-sm rounded-full shadow-sm hover:shadow-md transition-all hover:scale-110 border border-stone-200"
+                aria-label={
+                  addedToWishlist
+                    ? `Remove ${product.Heading} from wishlist`
+                    : `Add ${product.Heading} to wishlist`
+                }
+                className="absolute right-4 top-4 rounded-full border border-stone-200 bg-white/90 p-3 shadow-sm backdrop-blur-sm transition-all hover:scale-110 hover:shadow-md"
               >
                 <Heart
                   size={22}
@@ -172,19 +206,19 @@ export default function ProductDetail({ product }) {
               </button>
             </div>
 
-            {/* Thumbnail Images */}
             {images.length > 1 && (
-              <div className="flex gap-4 overflow-x-auto pb-2">
+              <div className="flex gap-0.5 overflow-x-auto pb-1 [-ms-overflow-style:none] [scrollbar-width:none] [&::-webkit-scrollbar]:hidden">
                 {images.map((img, index) => (
                   <button
                     key={index}
+                    type="button"
                     onClick={() => setSelectedImage(index)}
                     aria-label={`View product image ${index + 1}`}
                     aria-pressed={selectedImage === index}
-                    className={`flex-shrink-0 relative w-16 h-16 md:w-20 md:h-20 rounded-xl overflow-hidden border-2 transition-all ${
+                    className={`relative h-16 w-16 shrink-0 overflow-hidden transition-all md:h-20 md:w-20 ${
                       selectedImage === index
-                        ? "border-stone-700 ring-2 ring-stone-200"
-                        : "border-stone-200 hover:border-stone-300"
+                        ? "ring-2 ring-stone-800 ring-offset-1"
+                        : "opacity-80 hover:opacity-100"
                     }`}
                   >
                     {img ? (
@@ -192,13 +226,14 @@ export default function ProductDetail({ product }) {
                         src={img}
                         alt={`Thumbnail ${index + 1}`}
                         fill
-                        className="object-cover"
+                        className="object-cover object-center"
                         sizes="80px"
                         loading="lazy"
+                        quality={70}
                       />
                     ) : (
-                      <div className="w-full h-full flex items-center justify-center bg-gradient-to-br from-stone-50 to-amber-50">
-                        <div className="text-xl text-stone-300">🌸</div>
+                      <div className="flex h-full w-full items-center justify-center bg-stone-100">
+                        <span className="text-xl text-stone-300">🌸</span>
                       </div>
                     )}
                   </button>
@@ -208,11 +243,11 @@ export default function ProductDetail({ product }) {
           </div>
 
           {/* Product Info Section */}
-          <div>
+          <div className="px-5 lg:px-0">
             {/* Brand & Category */}
             <div className="mb-4">
               <span className="text-sm font-medium text-stone-600 uppercase tracking-wider">
-                {product.brand || "ROSELLE STUDIO"}
+                {product.brand || "Roselle Studio"}
               </span>
               <div className="flex items-center gap-2 mt-1">
                 {product.tags?.slice(0, 3).map((tag, index) => (
@@ -231,24 +266,13 @@ export default function ProductDetail({ product }) {
               {product.Heading}
             </h1>
 
-            {/* Rating & Stock */}
+            {/* Stock */}
             <div className="flex items-center gap-3 mb-6">
-              <div className="flex items-center gap-1">
-                {[...Array(5)].map((_, i) => (
-                  <Star
-                    key={i}
-                    size={18}
-                    className={`${
-                      i < 4 ? "fill-amber-400 text-amber-400" : "text-stone-300"
-                    }`}
-                  />
-                ))}
-                <span className="ml-2 text-stone-700 font-medium">4.8</span>
-              </div>
-              <span className="text-stone-500">•</span>
-              <span className="text-stone-700">128 reviews</span>
-              <span className="text-stone-500">•</span>
-              <span className="text-emerald-600 font-medium">In Stock</span>
+              {product.inStock ? (
+                <span className="text-emerald-600 font-medium">In Stock</span>
+              ) : (
+                <span className="text-amber-600 font-medium">Out of Stock</span>
+              )}
             </div>
 
             {/* Price */}
@@ -394,7 +418,7 @@ export default function ProductDetail({ product }) {
         </div>
 
         {/* Tabs Section - Description & Reviews */}
-        <div className="mt-12 mb-16">
+        <div className="mb-16 mt-12 px-5 lg:px-0">
           {/* Tabs Navigation */}
           <div className="flex border-b border-stone-200 mb-8">
             <button
@@ -490,27 +514,27 @@ export default function ProductDetail({ product }) {
                   </h4>
                   <ul className="space-y-3">
                     <li className="flex items-start gap-2">
-                      <span className="text-stone-600 font-medium">💧</span>
+                      <span className="text-stone-600 font-medium">🧹</span>
                       <span className="text-stone-700">
-                        Change water every 2 days
-                      </span>
-                    </li>
-                    <li className="flex items-start gap-2">
-                      <span className="text-stone-600 font-medium">🌡️</span>
-                      <span className="text-stone-700">
-                        Keep in cool room temperature
+                        Dust gently with a soft cloth
                       </span>
                     </li>
                     <li className="flex items-start gap-2">
                       <span className="text-stone-600 font-medium">☀️</span>
                       <span className="text-stone-700">
-                        Avoid direct sunlight
+                        Avoid direct sunlight to prevent fading
                       </span>
                     </li>
                     <li className="flex items-start gap-2">
-                      <span className="text-stone-600 font-medium">✂️</span>
+                      <span className="text-stone-600 font-medium">🏠</span>
                       <span className="text-stone-700">
-                        Trim stems at an angle every 3 days
+                        Store in a dry place
+                      </span>
+                    </li>
+                    <li className="flex items-start gap-2">
+                      <span className="text-stone-600 font-medium">✨</span>
+                      <span className="text-stone-700">
+                        No watering needed — lasts for years
                       </span>
                     </li>
                   </ul>
@@ -522,137 +546,63 @@ export default function ProductDetail({ product }) {
           {/* Reviews Tab Content */}
           {activeTab === "reviews" && (
             <div>
-              <div className="flex flex-col md:flex-row justify-between items-start md:items-center gap-4 mb-8">
-                <div>
-                  <h3 className="text-2xl font-bold text-stone-800">
-                    Customer Reviews
-                  </h3>
-                  <div className="flex items-center gap-4 mt-2">
-                    <div className="flex items-center gap-2">
-                      <div className="flex">
-                        {[...Array(5)].map((_, i) => (
-                          <Star
-                            key={i}
-                            size={20}
-                            className="fill-amber-400 text-amber-400"
-                          />
-                        ))}
-                      </div>
-                      <span className="text-2xl font-bold text-stone-800">
-                        4.8
-                      </span>
-                    </div>
-                    <span className="text-stone-500">•</span>
-                    <span className="text-stone-700">Based on 128 reviews</span>
-                  </div>
-                </div>
-                <button className="px-6 py-3 bg-stone-100 text-stone-700 rounded-full hover:bg-stone-200 transition-colors font-medium border border-stone-200">
-                  Write a Review
-                </button>
-              </div>
-
-              {/* Review Stats */}
-              <div className="bg-gradient-to-r from-stone-50 to-amber-50 rounded-2xl p-6 mb-8 border border-stone-200">
-                <div className="grid grid-cols-2 md:grid-cols-4 gap-6">
-                  <div className="text-center">
-                    <div className="text-3xl font-bold text-stone-800">95%</div>
-                    <div className="text-stone-600">Recommend</div>
-                  </div>
-                  <div className="text-center">
-                    <div className="text-3xl font-bold text-stone-800">98%</div>
-                    <div className="text-stone-600">Freshness</div>
-                  </div>
-                  <div className="text-center">
-                    <div className="text-3xl font-bold text-stone-800">96%</div>
-                    <div className="text-stone-600">Delivery</div>
-                  </div>
-                  <div className="text-center">
-                    <div className="text-3xl font-bold text-stone-800">94%</div>
-                    <div className="text-stone-600">Value</div>
-                  </div>
-                </div>
-              </div>
-
-              {/* Reviews List */}
-              <div className="space-y-6">
-                {reviews
-                  .slice(0, expandedReviews ? reviews.length : 2)
-                  .map((review) => (
-                    <div
-                      key={review.id}
-                      className="bg-white rounded-2xl p-6 border border-stone-200"
-                    >
-                      <div className="flex justify-between items-start mb-4">
-                        <div className="flex items-center gap-3">
-                          <div className="w-12 h-12 bg-gradient-to-r from-stone-100 to-amber-100 rounded-full flex items-center justify-center border border-stone-200">
-                            <span className="text-stone-700 font-semibold">
-                              {review.name
-                                .split(" ")
-                                .map((n) => n[0])
-                                .join("")}
-                            </span>
-                          </div>
-                          <div>
-                            <div className="flex items-center gap-2">
+              <h3 className="text-2xl font-bold text-stone-800 mb-4">
+                Customer Reviews
+              </h3>
+              {reviews.length > 0 ? (
+                <>
+                  <div className="space-y-6">
+                    {reviews.map((review) => (
+                      <div
+                        key={review.id}
+                        className="bg-white rounded-2xl p-6 border border-stone-200"
+                      >
+                        <div className="flex justify-between items-start mb-4">
+                          <div className="flex items-center gap-3">
+                            <div className="w-12 h-12 bg-gradient-to-r from-stone-100 to-amber-100 rounded-full flex items-center justify-center border border-stone-200">
+                              <span className="text-stone-700 font-semibold">
+                                {review.name
+                                  .split(" ")
+                                  .map((n) => n[0])
+                                  .join("")}
+                              </span>
+                            </div>
+                            <div>
                               <h4 className="font-semibold text-stone-800">
                                 {review.name}
                               </h4>
-                              {review.verified && (
-                                <span className="px-2 py-0.5 bg-emerald-100 text-emerald-700 text-xs rounded-full border border-emerald-200">
-                                  Verified
+                              <div className="flex items-center gap-2 mt-1">
+                                <div className="flex">
+                                  {[...Array(5)].map((_, i) => (
+                                    <Star
+                                      key={i}
+                                      size={14}
+                                      className={`${
+                                        i < review.rating
+                                          ? "fill-amber-400 text-amber-400"
+                                          : "text-stone-300"
+                                      }`}
+                                    />
+                                  ))}
+                                </div>
+                                <span className="text-stone-500 text-sm">
+                                  {review.date}
                                 </span>
-                              )}
-                            </div>
-                            <div className="flex items-center gap-2 mt-1">
-                              <div className="flex">
-                                {[...Array(5)].map((_, i) => (
-                                  <Star
-                                    key={i}
-                                    size={14}
-                                    className={`${
-                                      i < review.rating
-                                        ? "fill-amber-400 text-amber-400"
-                                        : "text-stone-300"
-                                    }`}
-                                  />
-                                ))}
                               </div>
-                              <span className="text-stone-500 text-sm">•</span>
-                              <span className="text-stone-600 text-sm flex items-center gap-1">
-                                <Calendar size={12} />
-                                {review.date}
-                              </span>
                             </div>
                           </div>
                         </div>
+                        <p className="text-stone-700 leading-relaxed">
+                          {review.comment}
+                        </p>
                       </div>
-                      <p className="text-stone-700 leading-relaxed">
-                        {review.comment}
-                      </p>
-                    </div>
-                  ))}
-              </div>
-
-              {/* Show More/Less Button */}
-              {reviews.length > 2 && (
-                <div className="text-center mt-8">
-                  <button
-                    onClick={() => setExpandedReviews(!expandedReviews)}
-                    className="inline-flex items-center gap-2 px-6 py-3 bg-stone-100 text-stone-700 rounded-full hover:bg-stone-200 transition-colors font-medium border border-stone-200"
-                  >
-                    {expandedReviews ? (
-                      <>
-                        Show Less
-                        <ChevronUp size={20} />
-                      </>
-                    ) : (
-                      <>
-                        Show More Reviews
-                        <ChevronDown size={20} />
-                      </>
-                    )}
-                  </button>
-                </div>
+                    ))}
+                  </div>
+                </>
+              ) : (
+                <p className="text-stone-600 py-8">
+                  No reviews yet. Be the first to leave a review after your purchase!
+                </p>
               )}
             </div>
           )}

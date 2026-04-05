@@ -1,7 +1,44 @@
-import React from "react";
+"use client";
+import React, { useState } from "react";
 import { Mail, Phone, MapPin, Send, CheckCircle } from "lucide-react";
 
 const Contact = () => {
+  const [status, setStatus] = useState(null);
+  const [isLoading, setIsLoading] = useState(false);
+
+  const handleSubmit = async (e) => {
+    e.preventDefault();
+    setStatus(null);
+    setIsLoading(true);
+    const form = e.target;
+    const formData = new FormData(form);
+    const accessKey =
+      process.env.NEXT_PUBLIC_WEB3FORMS_ACCESS_KEY ||
+      "4f59a8ec-acc5-4d94-b696-dd01d7af89b4";
+    formData.append("access_key", accessKey);
+    formData.append(
+      "subject",
+      `Contact: ${formData.get("firstName") || ""} ${formData.get("lastName") || ""}`.trim() || "Rosélle Studio contact form"
+    );
+    try {
+      const res = await fetch("https://api.web3forms.com/submit", {
+        method: "POST",
+        body: formData,
+      });
+      const data = await res.json();
+      if (data.success) {
+        setStatus("success");
+        form.reset();
+      } else {
+        setStatus("error");
+      }
+    } catch {
+      setStatus("error");
+    } finally {
+      setIsLoading(false);
+    }
+  };
+
   return (
     <div
       id="contact"
@@ -83,9 +120,9 @@ const Contact = () => {
               </div>
               <div>
                 <p className="text-sm text-stone-600">Call Us</p>
-                <p className="font-semibold text-stone-800">
-                  +1 (555) 123-4567
-                </p>
+                <a href="tel:+923436951448" className="font-semibold text-stone-800 hover:text-amber-600 transition-colors">
+                  +92 343 6951448
+                </a>
               </div>
             </div>
 
@@ -95,9 +132,9 @@ const Contact = () => {
               </div>
               <div>
                 <p className="text-sm text-stone-600">Email Us</p>
-                <p className="font-semibold text-stone-800">
-                  hello@roselle.com
-                </p>
+                <a href="mailto:rosellestudioofficial@gmail.com" className="font-semibold text-stone-800 hover:text-amber-600 transition-colors">
+                  rosellestudioofficial@gmail.com
+                </a>
               </div>
             </div>
 
@@ -106,11 +143,9 @@ const Contact = () => {
                 <MapPin size={20} className="text-white" />
               </div>
               <div>
-                <p className="text-sm text-stone-600">Visit Us</p>
+                <p className="text-sm text-stone-600">Based in</p>
                 <p className="font-semibold text-stone-800">
-                  123 Floral Lane,
-                  <br />
-                  Bloomington, BT 12345
+                  Lahore, Pakistan
                 </p>
               </div>
             </div>
@@ -128,8 +163,7 @@ const Contact = () => {
           </div>
 
           <form
-            method="POST"
-            action="/api/contact"
+            onSubmit={handleSubmit}
             className="relative bg-white rounded-2xl p-8 shadow-sm border border-stone-200 space-y-6 z-10"
           >
             <div className="text-center mb-2">
@@ -219,7 +253,7 @@ const Contact = () => {
                 className="mt-1 rounded border-stone-300 text-stone-700 focus:ring-stone-300"
               />
               <label htmlFor="terms" className="text-sm text-stone-600">
-                I agree to Roselle Studio&apos;s{" "}
+                I agree to Rosélle Studio&apos;s{" "}
                 <span className="text-stone-700 font-medium underline">
                   Terms of Service
                 </span>{" "}
@@ -230,15 +264,33 @@ const Contact = () => {
               </label>
             </div>
 
+            {status === "success" && (
+              <p className="text-center py-3 px-4 bg-emerald-50 text-emerald-800 rounded-xl text-sm border border-emerald-200">
+                Message sent! We&apos;ll get back to you soon.
+              </p>
+            )}
+            {status === "error" && (
+              <p className="text-center py-3 px-4 bg-red-50 text-red-800 rounded-xl text-sm border border-red-200">
+                Something went wrong. Please try again or email us directly.
+              </p>
+            )}
+
             <button
               type="submit"
-              className="w-full py-4 bg-stone-800 text-white font-semibold rounded-xl hover:bg-stone-900 transition-all duration-300 shadow-sm hover:shadow-md hover:-translate-y-0.5 flex items-center justify-center gap-2 group border border-stone-900"
+              disabled={isLoading}
+              className="w-full py-4 bg-stone-800 text-white font-semibold rounded-xl hover:bg-stone-900 transition-all duration-300 shadow-sm hover:shadow-md hover:-translate-y-0.5 flex items-center justify-center gap-2 group border border-stone-900 disabled:opacity-70 disabled:pointer-events-none"
             >
-              <Send
-                size={20}
-                className="group-hover:translate-x-1 transition-transform"
-              />
-              <span>Send Message</span>
+              {isLoading ? (
+                <span>Sending...</span>
+              ) : (
+                <>
+                  <Send
+                    size={20}
+                    className="group-hover:translate-x-1 transition-transform"
+                  />
+                  <span>Send Message</span>
+                </>
+              )}
             </button>
 
             <p className="text-center text-sm text-stone-500 mt-4">

@@ -11,33 +11,35 @@ export default async function ProductsContent({ searchParams }) {
   return (
     <>
       {/* Header */}
-      <div className="bg-gradient-to-r from-stone-800 to-stone-900 text-white py-16 px-5">
-        <div className="max-w-7xl mx-auto">
+      <div className="bg-gradient-to-r from-stone-800 to-stone-900 text-white py-12 px-4 sm:py-16 sm:px-5">
+        <div className="mx-auto max-w-7xl min-w-0">
           <div className="mb-6">
             <Link
               href="/"
-              className="inline-flex items-center gap-2 text-stone-300 hover:text-white transition-colors"
+              className="inline-flex min-h-10 items-center gap-2 text-stone-300 touch-manipulation transition-colors hover:text-white"
             >
               ← Back to Home
             </Link>
           </div>
-          <h1 className="text-4xl md:text-5xl font-bold mb-4">All Products</h1>
-          <p className="text-xl text-stone-300 max-w-3xl">
+          <h1 className="mb-4 text-3xl font-bold sm:text-4xl md:text-5xl">
+            All Products
+          </h1>
+          <p className="max-w-3xl text-base text-stone-300 sm:text-lg md:text-xl">
             Discover our complete collection of {data.totalProducts} elegant floral
             arrangements
           </p>
         </div>
       </div>
 
-      <div className="max-w-7xl mx-auto px-5 py-8">
-        <div className="flex flex-col lg:flex-row gap-8">
+      <div className="mx-auto max-w-7xl min-w-0 px-4 py-8 sm:px-5">
+        <div className="flex flex-col gap-8 lg:flex-row">
           {/* Sidebar Filters */}
-          <div className="lg:w-1/4">
+          <div className="min-w-0 lg:w-1/4">
             <FiltersClient categories={data.categories} allTags={data.allTags} />
           </div>
 
           {/* Main Content */}
-          <div className="lg:w-3/4">
+          <div className="min-w-0 lg:w-3/4">
             <SearchSortBar />
 
             {/* Results Info */}

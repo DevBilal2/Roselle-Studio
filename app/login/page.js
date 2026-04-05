@@ -1,5 +1,5 @@
 "use client";
-import React, { useState } from "react";
+import React, { useState, useEffect } from "react";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
 import {
@@ -9,13 +9,14 @@ import {
   ArrowRight,
   Eye,
   EyeOff,
-  Key,
   ChevronLeft,
 } from "lucide-react";
+import { checkAuthStatus } from "../lib/auth";
 import { loginCustomer, getCustomerData } from "../lib/shopify";
 
 export default function LoginPage() {
   const router = useRouter();
+  const [checking, setChecking] = useState(true);
   const [showPassword, setShowPassword] = useState(false);
   const [formData, setFormData] = useState({
     email: "",
@@ -24,6 +25,14 @@ export default function LoginPage() {
   });
   const [isLoading, setIsLoading] = useState(false);
   const [error, setError] = useState("");
+
+  useEffect(() => {
+    if (checkAuthStatus()) {
+      router.replace("/Account");
+      return;
+    }
+    setChecking(false);
+  }, [router]);
 
   const handleSubmit = async (e) => {
     e.preventDefault();
@@ -62,7 +71,7 @@ export default function LoginPage() {
       }
 
       setIsLoading(false);
-      router.push("/Account");
+      router.replace("/Account");
     } catch (error) {
       setIsLoading(false);
 
@@ -97,6 +106,14 @@ export default function LoginPage() {
     if (error) setError("");
   };
 
+  if (checking) {
+    return (
+      <div className="min-h-screen bg-gradient-to-b from-stone-50/30 to-white flex items-center justify-center">
+        <div className="text-stone-500">Loading...</div>
+      </div>
+    );
+  }
+
   return (
     <div className="min-h-screen bg-gradient-to-b from-stone-50/30 to-white">
       {/* Back Navigation */}
@@ -126,18 +143,13 @@ export default function LoginPage() {
                 Welcome Back
               </h1>
               <p className="text-stone-600">
-                Sign in to your Roselle Studio account
+                Sign in to your Rosélle Studio account
               </p>
-            </div>
-
-            {/* Info box */}
-            <div className="mb-6 p-4 bg-stone-50 border border-stone-200 rounded-xl">
-              <div className="flex items-center gap-2 text-stone-700 mb-2">
-                <Key size={16} className="text-stone-600" />
-                <span className="font-medium">Real Shopify Login:</span>
-              </div>
-              <p className="text-sm text-stone-600">
-                Use the email and password you registered with on Shopify
+              <p className="text-stone-500 text-sm mt-1">
+                Use the link from the email we sent you to activate, then sign in below with your email and password.
+              </p>
+              <p className="text-stone-500 text-sm mt-2">
+                Don&apos;t have an account? <Link href="/register" className="text-green-700 font-medium hover:text-green-800">Create one</Link>
               </p>
             </div>
 
@@ -233,7 +245,7 @@ export default function LoginPage() {
                   </>
                 ) : (
                   <>
-                    <span>Sign In to Shopify</span>
+                    <span>Sign in to my account</span>
                     <ArrowRight size={20} />
                   </>
                 )}

@@ -28,5 +28,5 @@ export function logout() {
   localStorage.removeItem("bloomcraft_logged_in");
   localStorage.removeItem("bloomcraft_token");
   localStorage.removeItem("bloomcraft_remember");
-  window.location.href = "/login";
+  window.location.href = "/register";
 }

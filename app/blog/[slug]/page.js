@@ -33,19 +33,35 @@ export async function generateStaticParams() {
 }
 
 export async function generateMetadata({ params }) {
-  // Await params before using it
   const { slug } = await params;
   const post = await fetchShopifyArticleByHandle(BLOG_HANDLE, slug);
 
   if (!post) {
-    return {
-      title: "Post Not Found | Roselle Studio",
-    };
+    return { title: "Post Not Found | Roselle Studio Lahore" };
   }
+
+  const description =
+    (post.excerpt || "").replace(/<[^>]*>/g, "").trim().substring(0, 160) ||
+    `${post.title} – Roselle Studio blog. Artificial flowers & decor tips, Lahore Pakistan.`;
+  const imageUrl = post.image;
 
   return {
     title: `${post.title} | Roselle Studio Blog`,
-    description: post.excerpt,
+    description: description,
+    openGraph: {
+      title: `${post.title} | Roselle Studio Lahore Blog`,
+      description: description,
+      type: "article",
+      images: imageUrl
+        ? [{ url: imageUrl, width: 1200, height: 630, alt: post.title }]
+        : [],
+    },
+    twitter: {
+      card: "summary_large_image",
+      title: `${post.title} | Roselle Studio`,
+      description: description,
+    },
+    alternates: { canonical: `/blog/${slug}` },
   };
 }
 
@@ -125,6 +141,7 @@ export default async function BlogPostPage({ params }) {
                 className="object-cover"
                 sizes="(max-width: 768px) 100vw, (max-width: 1200px) 50vw, 33vw"
                 loading="lazy"
+                quality={70}
               />
             ) : (
               <div className="absolute inset-0 flex items-center justify-center">

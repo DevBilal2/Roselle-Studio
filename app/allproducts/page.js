@@ -3,8 +3,9 @@ import { Suspense } from "react";
 import ProductsContent from "./ProductsContent";
 
 export const metadata = {
-  title: "All Products | Roselle Studio",
-  description: "Browse our complete collection of elegant floral arrangements",
+  title: "All Artificial Flowers & Bouquets | Roselle Studio Lahore",
+  description:
+    "Browse artificial flower bouquets, bunches, stems, decoration pieces & balloons. Full collection in Lahore, Pakistan. Wholesale available.",
 };
 
 export default async function AllProductsPage(props) {

@@ -10,18 +10,17 @@ const BlogCard = ({ post, featured = false, compact = false }) => {
       <Link href={`/blog/${post.slug}`}>
         <div className="group bg-white rounded-2xl overflow-hidden border border-stone-200 hover:border-stone-300 transition-all duration-300 shadow-sm hover:shadow-md cursor-pointer">
           {/* Image */}
-          <div className="relative h-48 overflow-hidden">
-            {post.image ? (
-              <Image
-                src={post.image}
-                alt={post.title}
-                fill
-                className="object-cover"
-                sizes="(max-width: 640px) 100vw, (max-width: 1024px) 50vw, 33vw"
-                loading="lazy"
-                quality={75}
-                // Mobile optimization: serve smaller WebP/AVIF images
-              />
+            <div className="relative h-48 overflow-hidden">
+              {post.image ? (
+                <Image
+                  src={post.image}
+                  alt={post.title}
+                  fill
+                  className="object-cover"
+                  sizes="(max-width: 640px) 100vw, (max-width: 1024px) 50vw, 33vw"
+                  loading="lazy"
+                  quality={70}
+                />
             ) : (
               <div className="w-full h-full bg-gradient-to-br from-stone-100 to-amber-100 flex items-center justify-center">
                 <div className="text-4xl text-stone-300">🌸</div>
@@ -137,7 +136,7 @@ const BlogCard = ({ post, featured = false, compact = false }) => {
               className="object-cover"
               sizes="(max-width: 640px) 100vw, (max-width: 1024px) 50vw, 33vw"
               loading="lazy"
-              quality={85}
+              quality={70}
             />
           ) : (
             <div className="w-full h-full bg-gradient-to-br from-stone-100 to-amber-100 flex items-center justify-center">

@@ -1,6 +1,10 @@
 /** @type {import('next').NextConfig} */
+const withBundleAnalyzer = require('@next/bundle-analyzer')({
+  enabled: process.env.ANALYZE === 'true',
+});
+
 const nextConfig = {
-  // Enable compression
+  // Enable compression (Brotli/Gzip handled automatically by Next.js/Vercel)
   compress: true,
   
   // Note: swcMinify is enabled by default in Next.js 15, no need to specify
@@ -82,7 +86,7 @@ const nextConfig = {
         minimize: true,
         splitChunks: {
           chunks: 'all',
-          maxInitialRequests: 30, // Increased for better mobile splitting
+          maxInitialRequests: 10, // Reduced to improve initial load performance
           minSize: 15000, // Smaller chunks for mobile
           maxSize: 244000, // Prevent too large chunks
           cacheGroups: {
@@ -112,7 +116,7 @@ const nextConfig = {
             // WhatsApp widget in separate chunk - mobile only loads when needed
             whatsapp: {
               name: 'whatsapp',
-              test: /[\\/]node_modules[\\/]@dxkit-org[\\/]/,
+              test: /[\\/]node_modules[\\/]react-floating-whatsapp[\\/]/,
               chunks: 'async', // Only load when needed
               priority: 25,
             },
@@ -207,4 +211,4 @@ const nextConfig = {
   },
 };
 
-module.exports = nextConfig;
+module.exports = withBundleAnalyzer(nextConfig);
